@@ -58,20 +58,25 @@ const profileEmail = document.getElementById("profileEmail");
 const profileStatus = document.getElementById("profileStatus");
 const saveProfileButton = document.getElementById("saveProfileButton");
 
+const usersList = document.getElementById("usersList");
+
 let isSignup = false;
-let unsubscribeMessages = null;
 let currentUser = null;
 let currentDisplayName = "";
+let unsubscribeMessages = null;
+let unsubscribeUsers = null;
 
 switchMode.addEventListener("click", () => {
     isSignup = !isSignup;
 
     authTitle.textContent = isSignup ? "Create Account" : "Welcome Back";
+
     authMessage.textContent = isSignup
         ? "Create your CHATX account"
         : "Login to continue to CHATX";
 
     authButton.textContent = isSignup ? "Sign Up" : "Login";
+
     switchLabel.textContent = isSignup
         ? "Already have an account?"
         : "Don't have an account?";
@@ -101,16 +106,16 @@ authForm.addEventListener("submit", async event => {
         }
     } catch (error) {
         const messages = {
-            "auth/email-already-in-use": "This email is already registered.",
-            "auth/invalid-email": "Please enter a valid email.",
-            "auth/invalid-credential": "Email or password is incorrect.",
+            "auth/email-already-in-use": "Email already registered.",
+            "auth/invalid-email": "Enter a valid email.",
+            "auth/invalid-credential": "Incorrect email or password.",
             "auth/weak-password": "Choose a stronger password.",
             "auth/network-request-failed": "Check your internet connection.",
             "auth/too-many-requests": "Too many attempts. Try again later."
         };
 
         errorMessage.textContent =
-            messages[error.code] || "Authentication failed. Please try again.";
+            messages[error.code] || "Authentication failed.";
     } finally {
         authButton.disabled = false;
     }
@@ -126,58 +131,9 @@ async function loadProfile(user) {
 
         if (currentUser?.uid !== user.uid) return;
 
-        if (profileSnap.exists()) {
-            currentDisplayName = profileSnap.data().displayName || "";
-        } else {
-            currentDisplayName = "";
-            let unsubscribeUsers = null;
-
-function showUsers() {
-    if (unsubscribeUsers) {
-        unsubscribeUsers();
-    }
-
-    const usersList = document.getElementById("usersList");
-
-    unsubscribeUsers = onSnapshot(
-        collection(db, "users"),
-        snapshot => {
-            usersList.replaceChildren();
-
-            let count = 0;
-
-            snapshot.forEach(userDoc => {
-                const user = userDoc.data();
-
-                if (!user.displayName) return;
-
-                count++;
-
-                const item = document.createElement("div");
-                item.className = "message";
-
-                const name = document.createElement("strong");
-                name.textContent = user.displayName;
-
-                const email = document.createElement("small");
-                email.textContent = user.email || "";
-
-                item.append(name, email);
-                usersList.appendChild(item);
-            });
-
-            if (count === 0) {
-                usersList.textContent = "No profiles found yet.";
-            }
-        },
-        error => {
-            console.error(error);
-            usersList.textContent =
-                "Unable to load users. Check Firestore rules.";
-        }
-    );
-}
-        }
+        currentDisplayName = profileSnap.exists()
+            ? profileSnap.data().displayName || ""
+            : "";
 
         displayNameInput.value = currentDisplayName;
 
@@ -199,7 +155,7 @@ profileForm.addEventListener("submit", async event => {
     const name = displayNameInput.value.trim();
 
     if (!name || name.length > 40) {
-        profileStatus.textContent = "Enter a name of 1–40 characters.";
+        profileStatus.textContent = "Name must be 1–40 characters.";
         return;
     }
 
@@ -211,7 +167,6 @@ profileForm.addEventListener("submit", async event => {
             doc(db, "users", currentUser.uid),
             {
                 displayName: name,
-                email: currentUser.email || "",
                 updatedAt: serverTimestamp()
             },
             { merge: true }
@@ -222,19 +177,14 @@ profileForm.addEventListener("submit", async event => {
     } catch (error) {
         console.error(error);
         profileStatus.textContent =
-            "Profile save nahi hua. Firestore rules check karo.";
+            "Profile save failed. Check Firestore rules.";
     } finally {
         saveProfileButton.disabled = false;
     }
 });
 
 function showMessages() {
-    if (unsubscribeMessages) {
-        unsubscribeMessages();
-        unsubscribeMessages = null;
-    }
-
-    chatBox.replaceChildren();
+    if (unsubscribeMessages) unsubscribeMessages();
 
     const messagesQuery = query(
         collection(db, "messages"),
@@ -254,7 +204,8 @@ function showMessages() {
                 item.className = "message";
 
                 const sender = document.createElement("small");
-                sender.textContent = message.displayName || message.email || "CHATX User";
+                sender.textContent =
+                    message.displayName || "CHATX User";
 
                 const text = document.createElement("div");
                 text.textContent = message.text || "";
@@ -269,7 +220,7 @@ function showMessages() {
         error => {
             console.error(error);
             chatStatus.textContent =
-                "Unable to load messages. Check Firestore rules and connection.";
+                "Unable to load messages. Check Firestore rules.";
         }
     );
 }
@@ -282,7 +233,7 @@ chatForm.addEventListener("submit", async event => {
     if (!text || !currentUser) return;
 
     if (!currentDisplayName) {
-        chatStatus.textContent = "Pehle apna profile name save karo.";
+        chatStatus.textContent = "Save your profile name first.";
         return;
     }
 
@@ -293,7 +244,6 @@ chatForm.addEventListener("submit", async event => {
         await addDoc(collection(db, "messages"), {
             text,
             uid: currentUser.uid,
-            email: currentUser.email || "",
             displayName: currentDisplayName,
             createdAt: serverTimestamp()
         });
@@ -303,18 +253,59 @@ chatForm.addEventListener("submit", async event => {
     } catch (error) {
         console.error(error);
         chatStatus.textContent =
-            "Message send nahi hua. Firestore rules check karo.";
+            "Message failed to send. Check Firestore rules.";
     } finally {
         sendButton.disabled = false;
     }
 });
+
+function showUsers() {
+    if (unsubscribeUsers) unsubscribeUsers();
+
+    usersList.replaceChildren();
+
+    unsubscribeUsers = onSnapshot(
+        collection(db, "users"),
+        snapshot => {
+            usersList.replaceChildren();
+
+            let count = 0;
+
+            snapshot.forEach(userDoc => {
+                const user = userDoc.data();
+
+                if (!user.displayName) return;
+
+                count++;
+
+                const item = document.createElement("div");
+                item.className = "message";
+
+                const name = document.createElement("strong");
+                name.textContent = user.displayName;
+
+                item.appendChild(name);
+                usersList.appendChild(item);
+            });
+
+            if (count === 0) {
+                usersList.textContent = "No profiles found yet.";
+            }
+        },
+        error => {
+            console.error(error);
+            usersList.textContent =
+                "Unable to load users. Check Firestore rules.";
+        }
+    );
+}
 
 document.getElementById("logoutButton").addEventListener("click", async () => {
     try {
         await signOut(auth);
     } catch (error) {
         console.error(error);
-        chatStatus.textContent = "Unable to log out. Please try again.";
+        chatStatus.textContent = "Unable to log out.";
     }
 });
 
@@ -327,6 +318,11 @@ onAuthStateChanged(auth, async user => {
         unsubscribeMessages = null;
     }
 
+    if (unsubscribeUsers) {
+        unsubscribeUsers();
+        unsubscribeUsers = null;
+    }
+
     if (user) {
         authSection.classList.add("hidden");
         dashboard.classList.remove("hidden");
@@ -337,13 +333,17 @@ onAuthStateChanged(auth, async user => {
 
         if (currentUser?.uid === user.uid) {
             showMessages();
+            showUsers();
         }
     } else {
         dashboard.classList.add("hidden");
         authSection.classList.remove("hidden");
+
         authForm.reset();
         chatForm.reset();
         chatBox.replaceChildren();
+        usersList.replaceChildren();
+
         chatStatus.textContent = "";
         profileStatus.textContent = "";
         displayNameInput.value = "";
