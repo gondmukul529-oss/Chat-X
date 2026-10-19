@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHATX Messenger</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+    <header>
+        <h1>CHAT<span>X</span></h1>
+        <p>Connect. Chat. Repeat.</p>
+    </header>
+
+    <section id="authSection">
+        <h2 id="authTitle">Welcome Back</h2>
+        <p id="authMessage">Login to continue to CHATX</p>
+
+        <form id="authForm">
+            <input
+                type="email"
+                id="email"
+                placeholder="Email address"
+                autocomplete="email"
+                required
+            >
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Password (minimum 6 characters)"
+                autocomplete="current-password"
+                minlength="6"
+                required
+            >
+
+            <button type="submit" id="authButton">Login</button>
+        </form>
+
+        <p id="errorMessage" role="alert"></p>
+
+        <p class="switchText">
+            <span id="switchLabel">Don't have an account?</span>
+            <button type="button" id="switchMode">Sign Up</button>
+        </p>
+    </section>
+
+    <section id="dashboard" class="hidden">
+        <h2>Welcome to CHATX!</h2>
+        <p>Logged in as:</p>
+        <p id="userEmail"></p>
+        <button id="logoutButton">Logout</button>
+    </section>
+
+    <footer>CHATX © 2026</footer>
+</div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
