@@ -8,18 +8,30 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    limit,
+    onSnapshot,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyAqN8kyQ31EFGtWRcy04u_AjhHXEw5moag",
-  authDomain: "chat-x-bd50d.firebaseapp.com",
-  projectId: "chat-x-bd50d",
-  storageBucket: "chat-x-bd50d.firebasestorage.app",
-  messagingSenderId: "761770904334",
-  appId: "1:761770904334:web:9b5c848fc0267d32a7255f",
-  measurementId: "G-3C2WPHNQGY"
+    apiKey: "AIzaSyAqN8kyQ31EFGtWRcy04u_AjhHXEw5moag",
+    authDomain: "chat-x-bd50d.firebaseapp.com",
+    projectId: "chat-x-bd50d",
+    storageBucket: "chat-x-bd50d.firebasestorage.app",
+    messagingSenderId: "761770904334",
+    appId: "1:761770904334:web:9b5c848fc0267d32a7255f",
+    measurementId: "G-3C2WPHNQGY"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 const authSection = document.getElementById("authSection");
 const dashboard = document.getElementById("dashboard");
@@ -31,7 +43,15 @@ const switchMode = document.getElementById("switchMode");
 const switchLabel = document.getElementById("switchLabel");
 const errorMessage = document.getElementById("errorMessage");
 
+const chatBox = document.getElementById("chatBox");
+const chatForm = document.getElementById("chatForm");
+const messageInput = document.getElementById("messageInput");
+const sendButton = document.getElementById("sendButton");
+const chatStatus = document.getElementById("chatStatus");
+
 let isSignup = false;
+let unsubscribeMessages = null;
+let currentUser = null;
 
 switchMode.addEventListener("click", () => {
     isSignup = !isSignup;
@@ -47,6 +67,7 @@ switchMode.addEventListener("click", () => {
         : "Don't have an account?";
 
     switchMode.textContent = isSignup ? "Login" : "Sign Up";
+
     document.getElementById("password").autocomplete =
         isSignup ? "new-password" : "current-password";
 
@@ -85,22 +106,109 @@ authForm.addEventListener("submit", async event => {
     }
 });
 
+function showMessages() {
+    if (unsubscribeMessages) {
+        unsubscribeMessages();
+    }
+
+    chatBox.replaceChildren();
+
+    const messagesQuery = query(
+        collection(db, "messages"),
+        orderBy("createdAt", "asc"),
+        limit(100)
+    );
+
+    unsubscribeMessages = onSnapshot(
+        messagesQuery,
+        snapshot => {
+            chatBox.replaceChildren();
+
+            snapshot.forEach(messageDoc => {
+                const message = messageDoc.data();
+
+                const item = document.createElement("div");
+                item.className = "message";
+
+                const sender = document.createElement("small");
+                sender.textContent = message.email || "CHATX User";
+
+                const text = document.createElement("div");
+                text.textContent = message.text || "";
+
+                item.append(sender, text);
+                chatBox.appendChild(item);
+            });
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+            chatStatus.textContent = "";
+        },
+        error => {
+            console.error(error);
+            chatStatus.textContent =
+                "Unable to load messages. Check Firestore rules and connection.";
+        }
+    );
+}
+
+chatForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const text = messageInput.value.trim();
+
+    if (!text || !currentUser) return;
+
+    sendButton.disabled = true;
+    chatStatus.textContent = "";
+
+    try {
+        await addDoc(collection(db, "messages"), {
+            text: text,
+            uid: currentUser.uid,
+            email: currentUser.email || "CHATX User",
+            createdAt: serverTimestamp()
+        });
+
+        messageInput.value = "";
+        messageInput.focus();
+    } catch (error) {
+        console.error(error);
+        chatStatus.textContent =
+            "Message send nahi hua. Firestore rules check karo.";
+    } finally {
+        sendButton.disabled = false;
+    }
+});
+
 document.getElementById("logoutButton").addEventListener("click", async () => {
     try {
         await signOut(auth);
-    } catch {
-        errorMessage.textContent = "Unable to log out. Please try again.";
+    } catch (error) {
+        console.error(error);
+        chatStatus.textContent = "Unable to log out. Please try again.";
     }
 });
 
 onAuthStateChanged(auth, user => {
+    currentUser = user;
+
+    if (unsubscribeMessages) {
+        unsubscribeMessages();
+        unsubscribeMessages = null;
+    }
+
     if (user) {
         authSection.classList.add("hidden");
         dashboard.classList.remove("hidden");
-        document.getElementById("userEmail").textContent = user.email;
+
+        document.getElementById("userEmail").textContent = user.email || "";
+        showMessages();
     } else {
         dashboard.classList.add("hidden");
         authSection.classList.remove("hidden");
         authForm.reset();
+        chatForm.reset();
+        chatBox.replaceChildren();
+        chatStatus.textContent = "";
     }
 });
