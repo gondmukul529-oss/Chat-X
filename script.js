@@ -16,7 +16,10 @@ import {
     orderBy,
     limit,
     onSnapshot,
-    serverTimestamp
+    serverTimestamp,
+    doc,
+    getDoc,
+    setDoc
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -49,9 +52,16 @@ const messageInput = document.getElementById("messageInput");
 const sendButton = document.getElementById("sendButton");
 const chatStatus = document.getElementById("chatStatus");
 
+const profileForm = document.getElementById("profileForm");
+const displayNameInput = document.getElementById("displayName");
+const profileEmail = document.getElementById("profileEmail");
+const profileStatus = document.getElementById("profileStatus");
+const saveProfileButton = document.getElementById("saveProfileButton");
+
 let isSignup = false;
 let unsubscribeMessages = null;
 let currentUser = null;
+let currentDisplayName = "";
 
 switchMode.addEventListener("click", () => {
     isSignup = !isSignup;
@@ -106,9 +116,75 @@ authForm.addEventListener("submit", async event => {
     }
 });
 
+async function loadProfile(user) {
+    profileEmail.textContent = user.email || "";
+    profileStatus.textContent = "";
+
+    try {
+        const profileRef = doc(db, "users", user.uid);
+        const profileSnap = await getDoc(profileRef);
+
+        if (currentUser?.uid !== user.uid) return;
+
+        if (profileSnap.exists()) {
+            currentDisplayName = profileSnap.data().displayName || "";
+        } else {
+            currentDisplayName = "";
+        }
+
+        displayNameInput.value = currentDisplayName;
+
+        if (!currentDisplayName) {
+            profileStatus.textContent = "Please choose your display name.";
+        }
+    } catch (error) {
+        console.error(error);
+        profileStatus.textContent =
+            "Unable to load profile. Check Firestore rules.";
+    }
+}
+
+profileForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!currentUser) return;
+
+    const name = displayNameInput.value.trim();
+
+    if (!name || name.length > 40) {
+        profileStatus.textContent = "Enter a name of 1–40 characters.";
+        return;
+    }
+
+    saveProfileButton.disabled = true;
+    profileStatus.textContent = "";
+
+    try {
+        await setDoc(
+            doc(db, "users", currentUser.uid),
+            {
+                displayName: name,
+                email: currentUser.email || "",
+                updatedAt: serverTimestamp()
+            },
+            { merge: true }
+        );
+
+        currentDisplayName = name;
+        profileStatus.textContent = "Profile saved successfully!";
+    } catch (error) {
+        console.error(error);
+        profileStatus.textContent =
+            "Profile save nahi hua. Firestore rules check karo.";
+    } finally {
+        saveProfileButton.disabled = false;
+    }
+});
+
 function showMessages() {
     if (unsubscribeMessages) {
         unsubscribeMessages();
+        unsubscribeMessages = null;
     }
 
     chatBox.replaceChildren();
@@ -131,7 +207,7 @@ function showMessages() {
                 item.className = "message";
 
                 const sender = document.createElement("small");
-                sender.textContent = message.email || "CHATX User";
+                sender.textContent = message.displayName || message.email || "CHATX User";
 
                 const text = document.createElement("div");
                 text.textContent = message.text || "";
@@ -158,14 +234,20 @@ chatForm.addEventListener("submit", async event => {
 
     if (!text || !currentUser) return;
 
+    if (!currentDisplayName) {
+        chatStatus.textContent = "Pehle apna profile name save karo.";
+        return;
+    }
+
     sendButton.disabled = true;
     chatStatus.textContent = "";
 
     try {
         await addDoc(collection(db, "messages"), {
-            text: text,
+            text,
             uid: currentUser.uid,
-            email: currentUser.email || "CHATX User",
+            email: currentUser.email || "",
+            displayName: currentDisplayName,
             createdAt: serverTimestamp()
         });
 
@@ -189,8 +271,9 @@ document.getElementById("logoutButton").addEventListener("click", async () => {
     }
 });
 
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
     currentUser = user;
+    currentDisplayName = "";
 
     if (unsubscribeMessages) {
         unsubscribeMessages();
@@ -202,7 +285,12 @@ onAuthStateChanged(auth, user => {
         dashboard.classList.remove("hidden");
 
         document.getElementById("userEmail").textContent = user.email || "";
-        showMessages();
+
+        await loadProfile(user);
+
+        if (currentUser?.uid === user.uid) {
+            showMessages();
+        }
     } else {
         dashboard.classList.add("hidden");
         authSection.classList.remove("hidden");
@@ -210,5 +298,7 @@ onAuthStateChanged(auth, user => {
         chatForm.reset();
         chatBox.replaceChildren();
         chatStatus.textContent = "";
+        profileStatus.textContent = "";
+        displayNameInput.value = "";
     }
 });
