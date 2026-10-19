@@ -130,6 +130,53 @@ async function loadProfile(user) {
             currentDisplayName = profileSnap.data().displayName || "";
         } else {
             currentDisplayName = "";
+            let unsubscribeUsers = null;
+
+function showUsers() {
+    if (unsubscribeUsers) {
+        unsubscribeUsers();
+    }
+
+    const usersList = document.getElementById("usersList");
+
+    unsubscribeUsers = onSnapshot(
+        collection(db, "users"),
+        snapshot => {
+            usersList.replaceChildren();
+
+            let count = 0;
+
+            snapshot.forEach(userDoc => {
+                const user = userDoc.data();
+
+                if (!user.displayName) return;
+
+                count++;
+
+                const item = document.createElement("div");
+                item.className = "message";
+
+                const name = document.createElement("strong");
+                name.textContent = user.displayName;
+
+                const email = document.createElement("small");
+                email.textContent = user.email || "";
+
+                item.append(name, email);
+                usersList.appendChild(item);
+            });
+
+            if (count === 0) {
+                usersList.textContent = "No profiles found yet.";
+            }
+        },
+        error => {
+            console.error(error);
+            usersList.textContent =
+                "Unable to load users. Check Firestore rules.";
+        }
+    );
+}
         }
 
         displayNameInput.value = currentDisplayName;
