@@ -5,9 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHATX Messenger</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        #chatBox {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .message {
+            background: #e8f0ff;
+            padding: 9px;
+            border-radius: 8px;
+            margin: 8px 0;
+            overflow-wrap: anywhere;
+        }
+        .message small {
+            display: block;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        #chatForm {
+            display: flex;
+            gap: 8px;
+        }
+        #chatForm input {
+            flex: 1;
+            min-width: 0;
+        }
+        #chatStatus {
+            overflow-wrap: anywhere;
+        }
+    </style>
 </head>
 <body>
-
 <div class="app">
     <header>
         <h1>CHAT<span>X</span></h1>
@@ -19,22 +52,12 @@
         <p id="authMessage">Login to continue to CHATX</p>
 
         <form id="authForm">
-            <input
-                type="email"
-                id="email"
-                placeholder="Email address"
-                autocomplete="email"
-                required
-            >
+            <input type="email" id="email" placeholder="Email address"
+                autocomplete="email" required>
 
-            <input
-                type="password"
-                id="password"
+            <input type="password" id="password"
                 placeholder="Password (minimum 6 characters)"
-                autocomplete="current-password"
-                minlength="6"
-                required
-            >
+                autocomplete="current-password" minlength="6" required>
 
             <button type="submit" id="authButton">Login</button>
         </form>
@@ -48,10 +71,22 @@
     </section>
 
     <section id="dashboard" class="hidden">
-        <h2>Welcome to CHATX!</h2>
-        <p>Logged in as:</p>
-        <p id="userEmail"></p>
-        <button id="logoutButton">Logout</button>
+        <h2>CHATX Global Chat</h2>
+        <p>Logged in as: <span id="userEmail"></span></p>
+
+        <div id="chatBox" aria-live="polite">
+            <p>Loading messages...</p>
+        </div>
+
+        <form id="chatForm">
+            <input type="text" id="messageInput"
+                placeholder="Type a message..."
+                maxlength="1000" required>
+            <button type="submit" id="sendButton">Send</button>
+        </form>
+
+        <p id="chatStatus" role="status"></p>
+        <button id="logoutButton" type="button">Logout</button>
     </section>
 
     <footer>CHATX © 2026</footer>
