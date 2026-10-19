@@ -72,6 +72,25 @@
 
     <section id="dashboard" class="hidden">
         <h2>CHATX Global Chat</h2>
+        <div id="profileSection">
+    <h3>My Profile</h3>
+    <p id="profileEmail"></p>
+
+    <form id="profileForm">
+        <input
+            type="text"
+            id="displayName"
+            placeholder="Enter your name"
+            maxlength="40"
+            required
+        >
+        <button type="submit" id="saveProfileButton">
+            Save Profile
+        </button>
+    </form>
+
+    <p id="profileStatus" role="status"></p>
+        </div>
         <p>Logged in as: <span id="userEmail"></span></p>
 
         <div id="chatBox" aria-live="polite">
