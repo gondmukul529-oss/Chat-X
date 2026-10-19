@@ -79,6 +79,15 @@
         <p>Loading users...</p>
     </div>
         </div>
+        <div id="privateChatSection" class="hidden">
+    <h3 id="privateChatTitle">Private Chat</h3>
+    <div id="privateChatBox" aria-live="polite" style="height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px; border-radius:10px; margin:15px 0;"></div>
+    <form id="privateChatForm" style="display:flex; gap:8px;">
+      <input type="text" id="privateMessageInput" placeholder="Type private message" required style="flex:1;">
+      <button type="submit">Send</button>
+      <button type="button" id="closePrivateChat">Close</button>
+    </form>
+        </div>
         <div id="profileSection">
     <h3>My Profile</h3>
     <p id="profileEmail"></p>
