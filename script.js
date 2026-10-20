@@ -19,7 +19,8 @@ import {
     serverTimestamp,
     doc,
     getDoc,
-    setDoc
+    setDoc,
+    where
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -36,55 +37,59 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const authSection = document.getElementById("authSection");
-const dashboard = document.getElementById("dashboard");
-const authForm = document.getElementById("authForm");
-const authTitle = document.getElementById("authTitle");
-const authMessage = document.getElementById("authMessage");
-const authButton = document.getElementById("authButton");
-const switchMode = document.getElementById("switchMode");
-const switchLabel = document.getElementById("switchLabel");
-const errorMessage = document.getElementById("errorMessage");
+const $ = id => document.getElementById(id);
 
-const chatBox = document.getElementById("chatBox");
-const chatForm = document.getElementById("chatForm");
-const messageInput = document.getElementById("messageInput");
-const sendButton = document.getElementById("sendButton");
-const chatStatus = document.getElementById("chatStatus");
+const authSection = $("authSection");
+const dashboard = $("dashboard");
+const authForm = $("authForm");
+const authTitle = $("authTitle");
+const authMessage = $("authMessage");
+const authButton = $("authButton");
+const switchMode = $("switchMode");
+const switchLabel = $("switchLabel");
+const errorMessage = $("errorMessage");
 
-const profileForm = document.getElementById("profileForm");
-const displayNameInput = document.getElementById("displayName");
-const profileEmail = document.getElementById("profileEmail");
-const profileStatus = document.getElementById("profileStatus");
-const saveProfileButton = document.getElementById("saveProfileButton");
+const chatBox = $("chatBox");
+const chatForm = $("chatForm");
+const messageInput = $("messageInput");
+const sendButton = $("sendButton");
+const chatStatus = $("chatStatus");
 
-const usersList = document.getElementById("usersList");
+const profileForm = $("profileForm");
+const displayNameInput = $("displayName");
+const profileEmail = $("profileEmail");
+const profileStatus = $("profileStatus");
+const saveProfileButton = $("saveProfileButton");
+
+const usersList = $("usersList");
+const chatTitle = $("chatTitle");
+const chatSubtitle = $("chatSubtitle");
 
 let isSignup = false;
 let currentUser = null;
 let currentDisplayName = "";
+let selectedUser = null;
 let unsubscribeMessages = null;
 let unsubscribeUsers = null;
+let chatRequest = 0;
 
 switchMode.addEventListener("click", () => {
     isSignup = !isSignup;
 
     authTitle.textContent = isSignup ? "Create Account" : "Welcome Back";
-
     authMessage.textContent = isSignup
         ? "Create your CHATX account"
         : "Login to continue to CHATX";
 
     authButton.textContent = isSignup ? "Sign Up" : "Login";
-
     switchLabel.textContent = isSignup
         ? "Already have an account?"
         : "Don't have an account?";
 
     switchMode.textContent = isSignup ? "Login" : "Sign Up";
-
-    document.getElementById("password").autocomplete =
-        isSignup ? "new-password" : "current-password";
+    $("password").autocomplete = isSignup
+        ? "new-password"
+        : "current-password";
 
     errorMessage.textContent = "";
 });
@@ -92,8 +97,8 @@ switchMode.addEventListener("click", () => {
 authForm.addEventListener("submit", async event => {
     event.preventDefault();
 
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+    const email = $("email").value.trim();
+    const password = $("password").value;
 
     errorMessage.textContent = "";
     authButton.disabled = true;
@@ -115,7 +120,7 @@ authForm.addEventListener("submit", async event => {
         };
 
         errorMessage.textContent =
-            messages[error.code] || "Authentication failed.";
+            messages[error.code] || "Login or signup failed.";
     } finally {
         authButton.disabled = false;
     }
@@ -131,221 +136,4 @@ async function loadProfile(user) {
 
         if (currentUser?.uid !== user.uid) return;
 
-        currentDisplayName = profileSnap.exists()
-            ? profileSnap.data().displayName || ""
-            : "";
-
-        displayNameInput.value = currentDisplayName;
-
-        if (!currentDisplayName) {
-            profileStatus.textContent = "Please choose your display name.";
-        }
-    } catch (error) {
-        console.error(error);
-        profileStatus.textContent =
-            "Unable to load profile. Check Firestore rules.";
-    }
-}
-
-profileForm.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    if (!currentUser) return;
-
-    const name = displayNameInput.value.trim();
-
-    if (!name || name.length > 40) {
-        profileStatus.textContent = "Name must be 1–40 characters.";
-        return;
-    }
-
-    saveProfileButton.disabled = true;
-    profileStatus.textContent = "";
-
-    try {
-        await setDoc(
-            doc(db, "users", currentUser.uid),
-            {
-                displayName: name,
-                updatedAt: serverTimestamp()
-            },
-            { merge: true }
-        );
-
-        currentDisplayName = name;
-        profileStatus.textContent = "Profile saved successfully!";
-    } catch (error) {
-        console.error(error);
-        profileStatus.textContent =
-            "Profile save failed. Check Firestore rules.";
-    } finally {
-        saveProfileButton.disabled = false;
-    }
-});
-
-function showMessages() {
-    if (unsubscribeMessages) unsubscribeMessages();
-
-    const messagesQuery = query(
-        collection(db, "messages"),
-        orderBy("createdAt", "asc"),
-        limit(100)
-    );
-
-    unsubscribeMessages = onSnapshot(
-        messagesQuery,
-        snapshot => {
-            chatBox.replaceChildren();
-
-            snapshot.forEach(messageDoc => {
-                const message = messageDoc.data();
-
-                const item = document.createElement("div");
-                item.className = "message";
-
-                const sender = document.createElement("small");
-                sender.textContent =
-                    message.displayName || "CHATX User";
-
-                const text = document.createElement("div");
-                text.textContent = message.text || "";
-
-                item.append(sender, text);
-                chatBox.appendChild(item);
-            });
-
-            chatBox.scrollTop = chatBox.scrollHeight;
-            chatStatus.textContent = "";
-        },
-        error => {
-            console.error(error);
-            chatStatus.textContent =
-                "Unable to load messages. Check Firestore rules.";
-        }
-    );
-}
-
-chatForm.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const text = messageInput.value.trim();
-
-    if (!text || !currentUser) return;
-
-    if (!currentDisplayName) {
-        chatStatus.textContent = "Save your profile name first.";
-        return;
-    }
-
-    sendButton.disabled = true;
-    chatStatus.textContent = "";
-
-    try {
-        await addDoc(collection(db, "messages"), {
-            text,
-            uid: currentUser.uid,
-            displayName: currentDisplayName,
-            createdAt: serverTimestamp()
-        });
-
-        messageInput.value = "";
-        messageInput.focus();
-    } catch (error) {
-        console.error(error);
-        chatStatus.textContent =
-            "Message failed to send. Check Firestore rules.";
-    } finally {
-        sendButton.disabled = false;
-    }
-});
-
-function showUsers() {
-    if (unsubscribeUsers) unsubscribeUsers();
-
-    usersList.replaceChildren();
-
-    unsubscribeUsers = onSnapshot(
-        collection(db, "users"),
-        snapshot => {
-            usersList.replaceChildren();
-
-            let count = 0;
-
-            snapshot.forEach(userDoc => {
-                const user = userDoc.data();
-
-                if (!user.displayName) return;
-
-                count++;
-
-                const item = document.createElement("div");
-                item.className = "message";
-
-                const name = document.createElement("strong");
-                name.textContent = user.displayName;
-
-                item.appendChild(name);
-                usersList.appendChild(item);
-            });
-
-            if (count === 0) {
-                usersList.textContent = "No profiles found yet.";
-            }
-        },
-        error => {
-            console.error(error);
-            usersList.textContent =
-                "Unable to load users. Check Firestore rules.";
-        }
-    );
-}
-
-document.getElementById("logoutButton").addEventListener("click", async () => {
-    try {
-        await signOut(auth);
-    } catch (error) {
-        console.error(error);
-        chatStatus.textContent = "Unable to log out.";
-    }
-});
-
-onAuthStateChanged(auth, async user => {
-    currentUser = user;
-    currentDisplayName = "";
-
-    if (unsubscribeMessages) {
-        unsubscribeMessages();
-        unsubscribeMessages = null;
-    }
-
-    if (unsubscribeUsers) {
-        unsubscribeUsers();
-        unsubscribeUsers = null;
-    }
-
-    if (user) {
-        authSection.classList.add("hidden");
-        dashboard.classList.remove("hidden");
-
-        document.getElementById("userEmail").textContent = user.email || "";
-
-        await loadProfile(user);
-
-        if (currentUser?.uid === user.uid) {
-            showMessages();
-            showUsers();
-        }
-    } else {
-        dashboard.classList.add("hidden");
-        authSection.classList.remove("hidden");
-
-        authForm.reset();
-        chatForm.reset();
-        chatBox.replaceChildren();
-        usersList.replaceChildren();
-
-        chatStatus.textContent = "";
-        profileStatus.textContent = "";
-        displayNameInput.value = "";
-    }
-});
+        currentDisplayName = profile
