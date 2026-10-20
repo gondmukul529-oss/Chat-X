@@ -1,6 +1,4 @@
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 
 import {
     getAuth,
@@ -15,13 +13,14 @@ import {
     collection,
     addDoc,
     query,
-    where,
     orderBy,
+    limit,
     onSnapshot,
     serverTimestamp,
     doc,
     getDoc,
-    setDoc
+    setDoc,
+    where
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -63,6 +62,8 @@ const profileStatus = $("profileStatus");
 const saveProfileButton = $("saveProfileButton");
 
 const usersList = $("usersList");
+const chatTitle = $("chatTitle");
+const chatSubtitle = $("chatSubtitle");
 
 let isSignup = false;
 let currentUser = null;
@@ -70,47 +71,30 @@ let currentDisplayName = "";
 let selectedUser = null;
 let unsubscribeMessages = null;
 let unsubscribeUsers = null;
-let messageGeneration = 0;
+let chatRequest = 0;
 
-function showStatus(message) {
-    chatStatus.textContent = message;
-}
+function showError(element, prefix, error) {
+    console.error(prefix, error);
 
-function stopMessages() {
-    messageGeneration++;
-
-    if (unsubscribeMessages) {
-        unsubscribeMessages();
-        unsubscribeMessages = null;
-    }
-}
-
-function getConversationId(uid1, uid2) {
-    return [uid1, uid2].sort().join("_");
+    element.textContent =
+        `${prefix}: ${error.code || "unknown"} - ${error.message || "Unknown error"}`;
 }
 
 switchMode.addEventListener("click", () => {
     isSignup = !isSignup;
 
-    authTitle.textContent = isSignup
-        ? "Create Account"
-        : "Welcome Back";
-
+    authTitle.textContent = isSignup ? "Create Account" : "Welcome Back";
     authMessage.textContent = isSignup
         ? "Create your CHATX account"
         : "Login to continue to CHATX";
 
-    authButton.textContent = isSignup
-        ? "Sign Up"
-        : "Login";
+    authButton.textContent = isSignup ? "Sign Up" : "Login";
 
     switchLabel.textContent = isSignup
         ? "Already have an account?"
         : "Don't have an account?";
 
-    switchMode.textContent = isSignup
-        ? "Login"
-        : "Sign Up";
+    switchMode.textContent = isSignup ? "Login" : "Sign Up";
 
     $("password").autocomplete = isSignup
         ? "new-password"
@@ -127,47 +111,19 @@ authForm.addEventListener("submit", async event => {
 
     errorMessage.textContent = "";
     authButton.disabled = true;
+    authButton.textContent = isSignup ? "Creating..." : "Logging in...";
 
     try {
         if (isSignup) {
-            await createUserWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
+            await createUserWithEmailAndPassword(auth, email, password);
         } else {
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
+            await signInWithEmailAndPassword(auth, email, password);
         }
     } catch (error) {
-        const messages = {
-            "auth/email-already-in-use":
-                "Email already registered.",
-
-            "auth/invalid-email":
-                "Enter a valid email.",
-
-            "auth/invalid-credential":
-                "Incorrect email or password.",
-
-            "auth/weak-password":
-                "Choose a stronger password.",
-
-            "auth/network-request-failed":
-                "Check your internet connection.",
-
-            "auth/too-many-requests":
-                "Too many attempts. Try again later."
-        };
-
-        errorMessage.textContent =
-            messages[error.code] ||
-            `${error.code}: ${error.message}`;
+        showError(errorMessage, "Login/Signup failed", error);
     } finally {
         authButton.disabled = false;
+        authButton.textContent = isSignup ? "Sign Up" : "Login";
     }
 });
 
@@ -176,9 +132,8 @@ async function loadProfile(user) {
     profileStatus.textContent = "";
 
     try {
-        const profileSnap = await getDoc(
-            doc(db, "users", user.uid)
-        );
+        const profileRef = doc(db, "users", user.uid);
+        const profileSnap = await getDoc(profileRef);
 
         if (currentUser?.uid !== user.uid) return;
 
@@ -189,14 +144,10 @@ async function loadProfile(user) {
         displayNameInput.value = currentDisplayName;
 
         if (!currentDisplayName) {
-            profileStatus.textContent =
-                "Please choose your display name.";
+            profileStatus.textContent = "Choose and save your display name.";
         }
     } catch (error) {
-        console.error("Profile error:", error);
-
-        profileStatus.textContent =
-            `Unable to load profile: ${error.code || error.message}`;
+        showError(profileStatus, "Profile load failed", error);
     }
 }
 
@@ -208,8 +159,7 @@ profileForm.addEventListener("submit", async event => {
     const name = displayNameInput.value.trim();
 
     if (!name || name.length > 40) {
-        profileStatus.textContent =
-            "Name must be 1–40 characters.";
+        profileStatus.textContent = "Name must be 1–40 characters.";
         return;
     }
 
@@ -226,98 +176,87 @@ profileForm.addEventListener("submit", async event => {
         );
 
         currentDisplayName = name;
-
-        profileStatus.textContent =
-            "Profile saved successfully!";
+        profileStatus.textContent = "Profile saved successfully!";
     } catch (error) {
-        console.error("Save profile error:", error);
-
-        profileStatus.textContent =
-            `Profile save failed: ${error.code || error.message}`;
+        showError(profileStatus, "Profile save failed", error);
     } finally {
         saveProfileButton.disabled = false;
     }
 });
 
-function openChat(user) {
-    if (!currentUser || user.uid === currentUser.uid) {
-        return;
+function stopMessages() {
+    chatRequest++;
+
+    if (unsubscribeMessages) {
+        unsubscribeMessages();
+        unsubscribeMessages = null;
     }
+}
 
-    selectedUser = user;
-
+function showMessages() {
     stopMessages();
 
     chatBox.replaceChildren();
-    showStatus("");
+    chatStatus.textContent = "";
 
-    $("chatTitle").textContent =
-        `CHATX Chat — ${user.displayName}`;
+    if (!currentUser || !selectedUser) {
+        chatTitle.textContent = "CHATX Chat";
+        chatSubtitle.textContent = "Select a user to start chatting.";
+        chatBox.textContent = "Choose someone from the People list.";
+        sendButton.disabled = true;
+        return;
+    }
 
-    $("chatSubtitle").textContent =
-        `Private conversation with ${user.displayName}`;
+    const requestId = chatRequest;
+    const otherUser = selectedUser;
+    const pair = [currentUser.uid, otherUser.uid].sort();
+    const conversationId = `${pair[0]}_${pair[1]}`;
 
-    const generation = messageGeneration;
-
-    const participants = [
-        currentUser.uid,
-        user.uid
-    ].sort();
-
-    const conversationId = getConversationId(
-        currentUser.uid,
-        user.uid
-    );
+    chatTitle.textContent = otherUser.displayName;
+    chatSubtitle.textContent = "Private conversation";
+    sendButton.disabled = false;
 
     const messagesQuery = query(
         collection(db, "messages"),
-        where("participants", "==", participants),
-        orderBy("createdAt", "asc")
+        where("conversationId", "==", conversationId),
+        orderBy("createdAt", "asc"),
+        limit(100)
     );
 
     unsubscribeMessages = onSnapshot(
         messagesQuery,
         snapshot => {
-            if (generation !== messageGeneration) {
-                return;
-            }
+            if (requestId !== chatRequest) return;
 
             chatBox.replaceChildren();
 
+            if (snapshot.empty) {
+                chatBox.textContent = "No messages yet. Say hello!";
+            }
+
             snapshot.forEach(messageDoc => {
                 const message = messageDoc.data();
-
                 const item = document.createElement("div");
                 item.className = "message";
 
                 const sender = document.createElement("small");
-
                 sender.textContent =
                     message.uid === currentUser.uid
                         ? "You"
-                        : message.displayName || user.displayName;
+                        : otherUser.displayName;
 
-                const body = document.createElement("div");
-                body.textContent = message.text || "";
+                const text = document.createElement("div");
+                text.textContent = message.text || "";
 
-                item.append(sender, body);
+                item.append(sender, text);
                 chatBox.appendChild(item);
             });
 
-            if (snapshot.empty) {
-                chatBox.textContent =
-                    "No messages yet. Say hello!";
-            }
-
             chatBox.scrollTop = chatBox.scrollHeight;
-            showStatus("");
+            chatStatus.textContent = "";
         },
         error => {
-            console.error("Load messages error:", error);
-
-            showStatus(
-                `Unable to load messages: ${error.code || error.message}`
-            );
+            showError(chatStatus, "Messages load failed", error);
         }
     );
 }
@@ -325,69 +264,41 @@ function openChat(user) {
 chatForm.addEventListener("submit", async event => {
     event.preventDefault();
 
-    if (!currentUser || !selectedUser) {
-        showStatus(
-            "Select a person from the People list first."
-        );
-        return;
-    }
-
     const text = messageInput.value.trim();
 
-    if (!text) return;
+    if (!text || !currentUser || !selectedUser) {
+        chatStatus.textContent = "Choose a user before sending a message.";
+        return;
+    }
 
     if (!currentDisplayName) {
-        showStatus("Save your profile name first.");
+        chatStatus.textContent = "Save your profile name first.";
         return;
     }
 
-    if (text.length > 1000) {
-        showStatus(
-            "Message must be 1000 characters or fewer."
-        );
-        return;
-    }
+    const recipient = selectedUser;
+    const pair = [currentUser.uid, recipient.uid].sort();
+    const conversationId = `${pair[0]}_${pair[1]}`;
 
     sendButton.disabled = true;
 
     try {
-        const participants = [
-            currentUser.uid,
-            selectedUser.uid
-        ].sort();
-
-        const conversationId = getConversationId(
-            currentUser.uid,
-            selectedUser.uid
-        );
-
-        await addDoc(
-            collection(db, "messages"),
-            {
-                text: text,
-                uid: currentUser.uid,
-                displayName: currentDisplayName,
-                conversationId: conversationId,
-                participants: participants,
-                createdAt: serverTimestamp()
-            }
-        );
+        await addDoc(collection(db, "messages"), {
+            conversationId,
+            participants: pair,
+            uid: currentUser.uid,
+            displayName: currentDisplayName,
+            text,
+            createdAt: serverTimestamp()
+        });
 
         messageInput.value = "";
-        showStatus("");
         messageInput.focus();
+        chatStatus.textContent = "";
     } catch (error) {
-        console.error("Send message error:", error);
-
-        showStatus(
-            `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
-        );
-
-        alert(
-            `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
-        );
+        showError(chatStatus, "Message send failed", error);
     } finally {
-        sendButton.disabled = false;
+        sendButton.disabled = !selectedUser;
     }
 });
 
@@ -407,70 +318,53 @@ function showUsers() {
             let count = 0;
 
             snapshot.forEach(userDoc => {
-                if (userDoc.id === currentUser?.uid) {
-                    return;
-                }
+                const user = userDoc.data();
 
-                const userData = userDoc.data();
-
-                if (!userData.displayName) {
+                if (!user.displayName || userDoc.id === currentUser?.uid) {
                     return;
                 }
 
                 count++;
 
-                const item = document.createElement("button");
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "message";
+                button.style.width = "100%";
+                button.style.textAlign = "left";
+                button.textContent = user.displayName;
 
-                item.type = "button";
-                item.className = "message";
-                item.style.width = "100%";
-                item.style.textAlign = "left";
-                item.style.cursor = "pointer";
+                if (selectedUser?.uid === userDoc.id) {
+                    button.style.border = "1px solid #38bdf8";
+                }
 
-                const name = document.createElement("strong");
-
-                name.textContent = userData.displayName;
-
-                item.appendChild(name);
-
-                item.addEventListener("click", () => {
-                    openChat({
+                button.addEventListener("click", () => {
+                    selectedUser = {
                         uid: userDoc.id,
-                        displayName: userData.displayName
-                    });
+                        displayName: user.displayName
+                    };
+
+                    showUsers();
+                    showMessages();
                 });
 
-                usersList.appendChild(item);
+                usersList.appendChild(button);
             });
 
             if (count === 0) {
-                usersList.textContent =
-                    "No other users yet. Create a second account to test chat.";
+                usersList.textContent = "No other profiles found yet.";
             }
         },
         error => {
-            console.error("Load users error:", error);
-
-            usersList.textContent =
-                `Unable to load users: ${error.code || error.message}`;
+            showError(usersList, "Users load failed", error);
         }
     );
 }
 
 $("logoutButton").addEventListener("click", async () => {
     try {
-        stopMessages();
-
-        if (unsubscribeUsers) {
-            unsubscribeUsers();
-            unsubscribeUsers = null;
-        }
-
         await signOut(auth);
     } catch (error) {
-        console.error("Logout error:", error);
-
-        showStatus("Unable to log out.");
+        showError(chatStatus, "Logout failed", error);
     }
 });
 
@@ -489,18 +383,12 @@ onAuthStateChanged(auth, async user => {
     if (user) {
         authSection.classList.add("hidden");
         dashboard.classList.remove("hidden");
-
         $("userEmail").textContent = user.email || "";
-        $("chatTitle").textContent = "CHATX Chat";
-        $("chatSubtitle").textContent =
-            "Select a user to start chatting.";
-
-        chatBox.replaceChildren();
-        showStatus("");
 
         await loadProfile(user);
 
         if (currentUser?.uid === user.uid) {
+            showMessages();
             showUsers();
         }
     } else {
@@ -509,13 +397,12 @@ onAuthStateChanged(auth, async user => {
 
         authForm.reset();
         chatForm.reset();
-
         chatBox.replaceChildren();
         usersList.replaceChildren();
 
-        showStatus("");
-
+        chatStatus.textContent = "";
         profileStatus.textContent = "";
         displayNameInput.value = "";
+        sendButton.disabled = true;
     }
 });
