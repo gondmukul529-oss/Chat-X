@@ -24,6 +24,7 @@
                     type="email"
                     id="email"
                     placeholder="Email address"
+                    autocomplete="email"
                     required
                 >
 
@@ -31,7 +32,7 @@
                     type="password"
                     id="password"
                     placeholder="Password"
-                    minlength="6"
+                    autocomplete="current-password"
                     required
                 >
 
@@ -89,12 +90,10 @@
 
                 <section class="card chat-card">
                     <div class="chat-heading">
-                        <div>
-                            <h2 id="chatTitle">CHATX Chat</h2>
-                            <p id="chatSubtitle">
-                                Select a user to start chatting.
-                            </p>
-                        </div>
+                        <h2 id="chatTitle">CHATX Chat</h2>
+                        <p id="chatSubtitle">
+                            Select a user to start chatting.
+                        </p>
                     </div>
 
                     <div id="chatBox" class="chat-box">
@@ -135,7 +134,7 @@
         <p>CHATX Messenger &copy; 2026</p>
     </footer>
 
-    <script type="module" src="script.js"></script>
+    <script type="module" src="./script.js"></script>
 
 </body>
 </html>
