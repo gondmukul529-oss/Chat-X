@@ -1,4 +1,6 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 
 import {
     getAuth,
@@ -90,21 +92,29 @@ function getConversationId(uid1, uid2) {
 switchMode.addEventListener("click", () => {
     isSignup = !isSignup;
 
-    authTitle.textContent = isSignup ? "Create Account" : "Welcome Back";
+    authTitle.textContent = isSignup
+        ? "Create Account"
+        : "Welcome Back";
+
     authMessage.textContent = isSignup
         ? "Create your CHATX account"
         : "Login to continue to CHATX";
 
-    authButton.textContent = isSignup ? "Sign Up" : "Login";
+    authButton.textContent = isSignup
+        ? "Sign Up"
+        : "Login";
 
     switchLabel.textContent = isSignup
         ? "Already have an account?"
         : "Don't have an account?";
 
-    switchMode.textContent = isSignup ? "Login" : "Sign Up";
+    switchMode.textContent = isSignup
+        ? "Login"
+        : "Sign Up";
 
-    $("password").autocomplete =
-        isSignup ? "new-password" : "current-password";
+    $("password").autocomplete = isSignup
+        ? "new-password"
+        : "current-password";
 
     errorMessage.textContent = "";
 });
@@ -120,22 +130,42 @@ authForm.addEventListener("submit", async event => {
 
     try {
         if (isSignup) {
-            await createUserWithEmailAndPassword(auth, email, password);
+            await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
         } else {
-            await signInWithEmailAndPassword(auth, email, password);
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
         }
     } catch (error) {
         const messages = {
-            "auth/email-already-in-use": "Email already registered.",
-            "auth/invalid-email": "Enter a valid email.",
-            "auth/invalid-credential": "Incorrect email or password.",
-            "auth/weak-password": "Choose a stronger password.",
-            "auth/network-request-failed": "Check your internet connection.",
-            "auth/too-many-requests": "Too many attempts. Try again later."
+            "auth/email-already-in-use":
+                "Email already registered.",
+
+            "auth/invalid-email":
+                "Enter a valid email.",
+
+            "auth/invalid-credential":
+                "Incorrect email or password.",
+
+            "auth/weak-password":
+                "Choose a stronger password.",
+
+            "auth/network-request-failed":
+                "Check your internet connection.",
+
+            "auth/too-many-requests":
+                "Too many attempts. Try again later."
         };
 
         errorMessage.textContent =
-            messages[error.code] || `${error.code}: ${error.message}`;
+            messages[error.code] ||
+            `${error.code}: ${error.message}`;
     } finally {
         authButton.disabled = false;
     }
@@ -146,7 +176,9 @@ async function loadProfile(user) {
     profileStatus.textContent = "";
 
     try {
-        const profileSnap = await getDoc(doc(db, "users", user.uid));
+        const profileSnap = await getDoc(
+            doc(db, "users", user.uid)
+        );
 
         if (currentUser?.uid !== user.uid) return;
 
@@ -157,10 +189,12 @@ async function loadProfile(user) {
         displayNameInput.value = currentDisplayName;
 
         if (!currentDisplayName) {
-            profileStatus.textContent = "Please choose your display name.";
+            profileStatus.textContent =
+                "Please choose your display name.";
         }
     } catch (error) {
         console.error("Profile error:", error);
+
         profileStatus.textContent =
             `Unable to load profile: ${error.code || error.message}`;
     }
@@ -174,22 +208,30 @@ profileForm.addEventListener("submit", async event => {
     const name = displayNameInput.value.trim();
 
     if (!name || name.length > 40) {
-        profileStatus.textContent = "Name must be 1–40 characters.";
+        profileStatus.textContent =
+            "Name must be 1–40 characters.";
         return;
     }
 
     saveProfileButton.disabled = true;
 
     try {
-        await setDoc(doc(db, "users", currentUser.uid), {
-            displayName: name,
-            updatedAt: serverTimestamp()
-        }, { merge: true });
+        await setDoc(
+            doc(db, "users", currentUser.uid),
+            {
+                displayName: name,
+                updatedAt: serverTimestamp()
+            },
+            { merge: true }
+        );
 
         currentDisplayName = name;
-        profileStatus.textContent = "Profile saved successfully!";
+
+        profileStatus.textContent =
+            "Profile saved successfully!";
     } catch (error) {
         console.error("Save profile error:", error);
+
         profileStatus.textContent =
             `Profile save failed: ${error.code || error.message}`;
     } finally {
@@ -198,30 +240,47 @@ profileForm.addEventListener("submit", async event => {
 });
 
 function openChat(user) {
-    if (!currentUser || user.uid === currentUser.uid) return;
+    if (!currentUser || user.uid === currentUser.uid) {
+        return;
+    }
 
     selectedUser = user;
+
     stopMessages();
 
     chatBox.replaceChildren();
     showStatus("");
 
-    $("chatTitle").textContent = `CHATX Chat — ${user.displayName}`;
-    $("chatSubtitle").textContent = `Private conversation with ${user.displayName}`;
+    $("chatTitle").textContent =
+        `CHATX Chat — ${user.displayName}`;
+
+    $("chatSubtitle").textContent =
+        `Private conversation with ${user.displayName}`;
 
     const generation = messageGeneration;
-    const conversationId = getConversationId(currentUser.uid, user.uid);
+
+    const participants = [
+        currentUser.uid,
+        user.uid
+    ].sort();
+
+    const conversationId = getConversationId(
+        currentUser.uid,
+        user.uid
+    );
 
     const messagesQuery = query(
         collection(db, "messages"),
-        where("conversationId", "==", conversationId),
+        where("participants", "==", participants),
         orderBy("createdAt", "asc")
     );
 
     unsubscribeMessages = onSnapshot(
         messagesQuery,
         snapshot => {
-            if (generation !== messageGeneration) return;
+            if (generation !== messageGeneration) {
+                return;
+            }
 
             chatBox.replaceChildren();
 
@@ -232,6 +291,7 @@ function openChat(user) {
                 item.className = "message";
 
                 const sender = document.createElement("small");
+
                 sender.textContent =
                     message.uid === currentUser.uid
                         ? "You"
@@ -245,7 +305,8 @@ function openChat(user) {
             });
 
             if (snapshot.empty) {
-                chatBox.textContent = "No messages yet. Say hello!";
+                chatBox.textContent =
+                    "No messages yet. Say hello!";
             }
 
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -265,7 +326,9 @@ chatForm.addEventListener("submit", async event => {
     event.preventDefault();
 
     if (!currentUser || !selectedUser) {
-        showStatus("Select a person from the People list first.");
+        showStatus(
+            "Select a person from the People list first."
+        );
         return;
     }
 
@@ -279,7 +342,9 @@ chatForm.addEventListener("submit", async event => {
     }
 
     if (text.length > 1000) {
-        showStatus("Message must be 1000 characters or fewer.");
+        showStatus(
+            "Message must be 1000 characters or fewer."
+        );
         return;
     }
 
@@ -291,29 +356,36 @@ chatForm.addEventListener("submit", async event => {
             selectedUser.uid
         ].sort();
 
-        const conversationId = participants.join("_");
+        const conversationId = getConversationId(
+            currentUser.uid,
+            selectedUser.uid
+        );
 
-        await addDoc(collection(db, "messages"), {
-            text,
-            uid: currentUser.uid,
-            displayName: currentDisplayName,
-            conversationId,
-            participants,
-            createdAt: serverTimestamp()
-        });
+        await addDoc(
+            collection(db, "messages"),
+            {
+                text: text,
+                uid: currentUser.uid,
+                displayName: currentDisplayName,
+                conversationId: conversationId,
+                participants: participants,
+                createdAt: serverTimestamp()
+            }
+        );
 
         messageInput.value = "";
         showStatus("");
         messageInput.focus();
-    }  catch (error) {
-    console.error("Send message error:", error);
+    } catch (error) {
+        console.error("Send message error:", error);
 
-    showStatus(
-        `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
-    );
-    alert(
-        `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
-    );
+        showStatus(
+            `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
+        );
+
+        alert(
+            `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
+        );
     } finally {
         sendButton.disabled = false;
     }
@@ -335,15 +407,20 @@ function showUsers() {
             let count = 0;
 
             snapshot.forEach(userDoc => {
-                if (userDoc.id === currentUser?.uid) return;
+                if (userDoc.id === currentUser?.uid) {
+                    return;
+                }
 
                 const userData = userDoc.data();
 
-                if (!userData.displayName) return;
+                if (!userData.displayName) {
+                    return;
+                }
 
                 count++;
 
                 const item = document.createElement("button");
+
                 item.type = "button";
                 item.className = "message";
                 item.style.width = "100%";
@@ -351,6 +428,7 @@ function showUsers() {
                 item.style.cursor = "pointer";
 
                 const name = document.createElement("strong");
+
                 name.textContent = userData.displayName;
 
                 item.appendChild(name);
@@ -391,6 +469,7 @@ $("logoutButton").addEventListener("click", async () => {
         await signOut(auth);
     } catch (error) {
         console.error("Logout error:", error);
+
         showStatus("Unable to log out.");
     }
 });
@@ -413,7 +492,8 @@ onAuthStateChanged(auth, async user => {
 
         $("userEmail").textContent = user.email || "";
         $("chatTitle").textContent = "CHATX Chat";
-        $("chatSubtitle").textContent = "Select a user to start chatting.";
+        $("chatSubtitle").textContent =
+            "Select a user to start chatting.";
 
         chatBox.replaceChildren();
         showStatus("");
@@ -429,10 +509,12 @@ onAuthStateChanged(auth, async user => {
 
         authForm.reset();
         chatForm.reset();
+
         chatBox.replaceChildren();
         usersList.replaceChildren();
 
         showStatus("");
+
         profileStatus.textContent = "";
         displayNameInput.value = "";
     }
