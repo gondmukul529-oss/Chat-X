@@ -4,19 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHATX Messenger</title>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <section id="authSection" class="auth-section">
-        <div class="auth-card">
-            <div class="brand-logo">C</div>
-            <h1>CHATX</h1>
-            <p class="tagline">Connect. Chat. Share.</p>
+    <header class="app-header">
+        <h1>CHATX</h1>
+        <p>Connect. Chat. Share.</p>
+    </header>
+
+    <main class="container">
+
+        <section id="authSection" class="card">
+            <h2 id="authTitle">Welcome Back</h2>
+            <p id="authMessage">Login to continue to CHATX</p>
 
             <form id="authForm">
-                <h2 id="authTitle">Login</h2>
-
                 <input
                     type="email"
                     id="email"
@@ -28,221 +31,110 @@
                 <input
                     type="password"
                     id="password"
-                    placeholder="Password (minimum 6 characters)"
+                    placeholder="Password"
                     autocomplete="current-password"
-                    minlength="6"
                     required
                 >
-
-                <p id="authMessage" class="status-message"></p>
-                <p id="errorMessage" class="error-message"></p>
 
                 <button type="submit" id="authButton">Login</button>
             </form>
 
-            <p class="switch-text">
+            <p id="errorMessage" class="status"></p>
+
+            <p>
                 <span id="switchLabel">Don't have an account?</span>
-                <button type="button" id="switchMode">Sign up</button>
+                <button type="button" id="switchMode" class="text-button">
+                    Sign Up
+                </button>
             </p>
-        </div>
-    </section>
+        </section>
 
-    <main id="dashboard" class="dashboard hidden">
+        <section id="dashboard" class="hidden">
 
-        <aside class="sidebar">
+            <div class="card profile-card">
+                <h2>Your Profile</h2>
 
-            <header class="sidebar-header">
-                <div class="brand">
-                    <div class="small-logo">C</div>
-                    <h2>CHATX</h2>
-                </div>
+                <p>
+                    Logged in as:
+                    <strong id="userEmail"></strong>
+                </p>
 
-                <button id="logoutButton" class="logout-button">
-                    Logout
-                </button>
-            </header>
-
-            <div class="profile-card">
-                <div id="myAvatar" class="avatar my-avatar">C</div>
-
-                <div class="profile-info">
-                    <strong id="myDisplayName">Your Profile</strong>
-                    <small id="userEmail"></small>
-                </div>
-            </div>
-
-            <form id="profileForm" class="profile-form">
-                <label for="displayName">Your display name</label>
-
-                <input
-                    type="text"
-                    id="displayName"
-                    placeholder="Enter your name"
-                    maxlength="40"
-                    required
-                >
-
-                <button type="submit" id="saveProfileButton">
-                    Save Profile
-                </button>
-
-                <p id="profileStatus" class="status-message"></p>
-            </form>
-
-            <div class="contacts-heading">
-                <h3>Messages</h3>
-                <span id="contactCount">0</span>
-            </div>
-
-            <input
-                type="search"
-                id="userSearch"
-                class="search-input"
-                placeholder="Search people..."
-                autocomplete="off"
-            >
-
-            <div id="usersList" class="users-list">
-                <p class="empty-text">Loading people...</p>
-            </div>
-
-        </aside>
-
-        <section class="chat-panel">
-
-            <div id="chatWelcome" class="chat-welcome">
-                <div class="welcome-icon">C</div>
-                <h1>Welcome to CHATX</h1>
-                <p>Select a person from the left to start chatting.</p>
-                <span>Simple. Fast. Connected.</span>
-            </div>
-
-            <div id="activeChat" class="active-chat hidden">
-
-                <header class="chat-header">
-                    <div class="chat-user-info">
-                        <div id="chatAvatar" class="avatar">C</div>
-
-                        <div>
-                            <h3 id="chatTitle">Select a person</h3>
-                            <p id="chatSubtitle">CHATX Messenger</p>
-                        </div>
-                    </div>
-                </header>
-
-                <div id="chatBox" class="chat-box">
-                    <p class="empty-text">Your conversation will appear here.</p>
-                </div>
-
-                <form id="chatForm" class="chat-form">
+                <form id="profileForm">
                     <input
                         type="text"
-                        id="messageInput"
-                        placeholder="Type a message..."
-                        maxlength="1000"
-                        autocomplete="off"
+                        id="displayName"
+                        placeholder="Choose your display name"
+                        maxlength="40"
                         required
                     >
 
-                    <button type="submit" id="sendButton">
-                        Send
+                    <button type="submit" id="saveProfileButton">
+                        Save Profile
                     </button>
                 </form>
 
-                <p id="chatStatus" class="chat-status"></p>
+                <p id="profileEmail"></p>
+                <p id="profileStatus" class="status"></p>
+            </div>
+
+            <div class="chat-layout">
+
+                <aside class="card users-card" id="usersSection">
+                    <h2>People</h2>
+                    <p>Choose someone to chat with.</p>
+
+                    <div id="usersList">
+                        <p>Loading users...</p>
+                    </div>
+                </aside>
+
+                <section class="card chat-card">
+                    <div class="chat-heading">
+                        <h2 id="chatTitle">CHATX Chat</h2>
+                        <p id="chatSubtitle">
+                            Select a user to start chatting.
+                        </p>
+                    </div>
+
+                    <div id="chatBox" class="chat-box">
+                        <p class="empty-message">
+                            Your messages will appear here.
+                        </p>
+                    </div>
+
+                    <form id="chatForm" class="chat-form">
+                        <input
+                            type="text"
+                            id="messageInput"
+                            placeholder="Type a message..."
+                            maxlength="1000"
+                            autocomplete="off"
+                            required
+                        >
+
+                        <button type="submit" id="sendButton">
+                            Send
+                        </button>
+                    </form>
+
+                    <p id="chatStatus" class="status"></p>
+                </section>
 
             </div>
+
+            <button type="button" id="logoutButton" class="logout-button">
+                Logout
+            </button>
 
         </section>
 
     </main>
 
-    <style>
-  body { background: #111b21 !important; color: #e9edef !important; font-family: 'Segoe UI', sans-serif; margin:0; }
-  
-  /* Chat layout sahi karne ke liye */
-  #app { display:flex; height:100vh; }
-  
-  /* Left Side - User List */
-  #sidebar { width: 350px; background: #111b21; border-right: 1px solid #222d34; padding: 15px; }
-  
-  /* Right Side */
-  #chatArea { flex:1; background: #0b141a; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    <footer>
+        <p>CHATX Messenger &copy; 2026</p>
+    </footer>
 
-  /* Input aur Buttons */
-  input { background: #202c33 !important; border:none !important; color:white !important; padding:10px 14px !important; border-radius:8px !important; }
-  button { background: #00a884 !important; color:white !important; border:none !important; padding:8px 18px !important; border-radius:20px !important; font-weight:600; cursor:pointer; }
+    <script type="module" src="./script.js"></script>
 
-  /* User Item - Ab white nahi, dark hoga */
-  #userList > div {
-    background: transparent !important;
-    color: white !important;
-    padding: 12px !important;
-    border-radius: 0 !important;
-    border-bottom: 1px solid #222d34 !important;
-    display:flex !important;
-    align-items:center !important;
-    gap:10px !important;
-  }
-  #userList > div:hover { background: #202c33 !important; }
-  
-  /* A wala Avatar - Perfect Circle */
-  #userList > div div:first-child {
-    background: #00a884 !important;
-    color:white !important;
-    width:40px !important; height:40px !important;
-    border-radius:50% !important;
-    display:flex !important; align-items:center !important; justify-content:center !important;
-    font-weight:bold !important;
-  }
-  /* Email chhota karo */
-  #userList > div div:last-child {
-    font-size: 12px !important;
-    color: #8696a0 !important;
-  }
-</style>
-</style>
-/* FINAL OVERRIDE - White dabba hatane ke liye */
-div[style*="background: white"],
-div[style*="background-color: white"],
-div[style*="background:#fff"],
-div[style*="background: #f8e8e8"],
-.pink-box, .user-card {
-  background: #1e293b !important;
-  border: 1px solid #334155 !important;
-  border-radius: 12px !important;
-}
-
-/* Jo Anurag wala box hai usko target */
-div:has(> div:contains("Anurag")) {
-  background: #1e293b !important;
-}
-
-/* Better fix - har user item ke liye */
-#userList > div, .users-list > div, div.user-item {
-  background: #1e293b !important;
-  color: white !important;
-  border-radius: 12px !important;
-  padding: 10px !important;
-  margin: 6px 0 !important;
-}
-
-#userList > div *, .users-list > div * {
-  color: white !important;
-  background: transparent !important;
-}
-
-/* A wala circle */
-#userList > div div:first-child, .avatar {
-  background: #25D366 !important;
-  color: white !important;
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-    </style>
 </body>
 </html>
