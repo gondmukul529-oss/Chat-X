@@ -5,128 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHATX Messenger</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        #chatBox {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 15px 0;
-            border-radius: 10px;
-            text-align: left;
-        }
-        .message {
-            background: #e8f0ff;
-            padding: 9px;
-            border-radius: 8px;
-            margin: 8px 0;
-            overflow-wrap: anywhere;
-        }
-        .message small {
-            display: block;
-            color: #555;
-            margin-bottom: 4px;
-        }
-        #chatForm {
-            display: flex;
-            gap: 8px;
-        }
-        #chatForm input {
-            flex: 1;
-            min-width: 0;
-        }
-        #chatStatus {
-            overflow-wrap: anywhere;
-        }
-    </style>
 </head>
 <body>
-<div class="app">
-    <header>
-        <h1>CHAT<span>X</span></h1>
-        <p>Connect. Chat. Repeat.</p>
+
+    <header class="app-header">
+        <h1>CHATX</h1>
+        <p>Connect. Chat. Share.</p>
     </header>
 
-    <section id="authSection">
-        <h2 id="authTitle">Welcome Back</h2>
-        <p id="authMessage">Login to continue to CHATX</p>
+    <main class="container">
 
-        <form id="authForm">
-            <input type="email" id="email" placeholder="Email address"
-                autocomplete="email" required>
+        <section id="authSection" class="card">
+            <h2 id="authTitle">Welcome Back</h2>
+            <p id="authMessage">Login to continue to CHATX</p>
 
-            <input type="password" id="password"
-                placeholder="Password (minimum 6 characters)"
-                autocomplete="current-password" minlength="6" required>
+            <form id="authForm">
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Email address"
+                    required
+                >
 
-            <button type="submit" id="authButton">Login</button>
-        </form>
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Password"
+                    minlength="6"
+                    required
+                >
 
-        <p id="errorMessage" role="alert"></p>
+                <button type="submit" id="authButton">Login</button>
+            </form>
 
-        <p class="switchText">
-            <span id="switchLabel">Don't have an account?</span>
-            <button type="button" id="switchMode">Sign Up</button>
-        </p>
-    </section>
+            <p id="errorMessage" class="status"></p>
 
-    <section id="dashboard" class="hidden">
-        <h2>CHATX Global Chat</h2>
-        <div id="usersSection">
-    <h3>Users</h3>
-    <p>Registered CHATX users</p>
-    <div id="usersList">
-        <p>Loading users...</p>
-    </div>
-        </div>
-        <div id="privateChatSection" class="hidden">
-    <h3 id="privateChatTitle">Private Chat</h3>
-    <div id="privateChatBox" aria-live="polite" style="height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px; border-radius:10px; margin:15px 0;"></div>
-    <form id="privateChatForm" style="display:flex; gap:8px;">
-      <input type="text" id="privateMessageInput" placeholder="Type private message" required style="flex:1;">
-      <button type="submit">Send</button>
-      <button type="button" id="closePrivateChat">Close</button>
-    </form>
-        </div>
-        <div id="profileSection">
-    <h3>My Profile</h3>
-    <p id="profileEmail"></p>
+            <p>
+                <span id="switchLabel">Don't have an account?</span>
+                <button type="button" id="switchMode" class="text-button">
+                    Sign Up
+                </button>
+            </p>
+        </section>
 
-    <form id="profileForm">
-        <input
-            type="text"
-            id="displayName"
-            placeholder="Enter your name"
-            maxlength="40"
-            required
-        >
-        <button type="submit" id="saveProfileButton">
-            Save Profile
-        </button>
-    </form>
+        <section id="dashboard" class="hidden">
 
-    <p id="profileStatus" role="status"></p>
-        </div>
-        <p>Logged in as: <span id="userEmail"></span></p>
+            <div class="card profile-card">
+                <h2>Your Profile</h2>
 
-        <div id="chatBox" aria-live="polite">
-            <p>Loading messages...</p>
-        </div>
+                <p>
+                    Logged in as:
+                    <strong id="userEmail"></strong>
+                </p>
 
-        <form id="chatForm">
-            <input type="text" id="messageInput"
-                placeholder="Type a message..."
-                maxlength="1000" required>
-            <button type="submit" id="sendButton">Send</button>
-        </form>
+                <form id="profileForm">
+                    <input
+                        type="text"
+                        id="displayName"
+                        placeholder="Choose your display name"
+                        maxlength="40"
+                        required
+                    >
 
-        <p id="chatStatus" role="status"></p>
-        <button id="logoutButton" type="button">Logout</button>
-    </section>
+                    <button type="submit" id="saveProfileButton">
+                        Save Profile
+                    </button>
+                </form>
 
-    <footer>CHATX © 2026</footer>
-</div>
+                <p id="profileEmail"></p>
+                <p id="profileStatus" class="status"></p>
+            </div>
 
-<script type="module" src="script.js"></script>
+            <div class="chat-layout">
+
+                <aside class="card users-card" id="usersSection">
+                    <h2>People</h2>
+                    <p>Choose someone to chat with.</p>
+
+                    <div id="usersList">
+                        <p>Loading users...</p>
+                    </div>
+                </aside>
+
+                <section class="card chat-card">
+                    <div class="chat-heading">
+                        <div>
+                            <h2 id="chatTitle">CHATX Chat</h2>
+                            <p id="chatSubtitle">
+                                Select a user to start chatting.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="chatBox" class="chat-box">
+                        <p class="empty-message">
+                            Your messages will appear here.
+                        </p>
+                    </div>
+
+                    <form id="chatForm" class="chat-form">
+                        <input
+                            type="text"
+                            id="messageInput"
+                            placeholder="Type a message..."
+                            maxlength="1000"
+                            autocomplete="off"
+                            required
+                        >
+
+                        <button type="submit" id="sendButton">
+                            Send
+                        </button>
+                    </form>
+
+                    <p id="chatStatus" class="status"></p>
+                </section>
+
+            </div>
+
+            <button type="button" id="logoutButton" class="logout-button">
+                Logout
+            </button>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>CHATX Messenger &copy; 2026</p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+
 </body>
 </html>
