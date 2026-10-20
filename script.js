@@ -13,8 +13,8 @@ import {
     collection,
     addDoc,
     query,
+    where,
     orderBy,
-    limit,
     onSnapshot,
     serverTimestamp,
     doc,
@@ -36,41 +36,61 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const authSection = document.getElementById("authSection");
-const dashboard = document.getElementById("dashboard");
-const authForm = document.getElementById("authForm");
-const authTitle = document.getElementById("authTitle");
-const authMessage = document.getElementById("authMessage");
-const authButton = document.getElementById("authButton");
-const switchMode = document.getElementById("switchMode");
-const switchLabel = document.getElementById("switchLabel");
-const errorMessage = document.getElementById("errorMessage");
+const $ = id => document.getElementById(id);
 
-const chatBox = document.getElementById("chatBox");
-const chatForm = document.getElementById("chatForm");
-const messageInput = document.getElementById("messageInput");
-const sendButton = document.getElementById("sendButton");
-const chatStatus = document.getElementById("chatStatus");
+const authSection = $("authSection");
+const dashboard = $("dashboard");
+const authForm = $("authForm");
+const authTitle = $("authTitle");
+const authMessage = $("authMessage");
+const authButton = $("authButton");
+const switchMode = $("switchMode");
+const switchLabel = $("switchLabel");
+const errorMessage = $("errorMessage");
 
-const profileForm = document.getElementById("profileForm");
-const displayNameInput = document.getElementById("displayName");
-const profileEmail = document.getElementById("profileEmail");
-const profileStatus = document.getElementById("profileStatus");
-const saveProfileButton = document.getElementById("saveProfileButton");
+const chatBox = $("chatBox");
+const chatForm = $("chatForm");
+const messageInput = $("messageInput");
+const sendButton = $("sendButton");
+const chatStatus = $("chatStatus");
 
-const usersList = document.getElementById("usersList");
+const profileForm = $("profileForm");
+const displayNameInput = $("displayName");
+const profileEmail = $("profileEmail");
+const profileStatus = $("profileStatus");
+const saveProfileButton = $("saveProfileButton");
+
+const usersList = $("usersList");
 
 let isSignup = false;
 let currentUser = null;
 let currentDisplayName = "";
+let selectedUser = null;
 let unsubscribeMessages = null;
 let unsubscribeUsers = null;
+let messageGeneration = 0;
+
+function showStatus(message) {
+    chatStatus.textContent = message;
+}
+
+function stopMessages() {
+    messageGeneration++;
+
+    if (unsubscribeMessages) {
+        unsubscribeMessages();
+        unsubscribeMessages = null;
+    }
+}
+
+function getConversationId(uid1, uid2) {
+    return [uid1, uid2].sort().join("_");
+}
 
 switchMode.addEventListener("click", () => {
     isSignup = !isSignup;
 
     authTitle.textContent = isSignup ? "Create Account" : "Welcome Back";
-
     authMessage.textContent = isSignup
         ? "Create your CHATX account"
         : "Login to continue to CHATX";
@@ -83,7 +103,7 @@ switchMode.addEventListener("click", () => {
 
     switchMode.textContent = isSignup ? "Login" : "Sign Up";
 
-    document.getElementById("password").autocomplete =
+    $("password").autocomplete =
         isSignup ? "new-password" : "current-password";
 
     errorMessage.textContent = "";
@@ -92,8 +112,8 @@ switchMode.addEventListener("click", () => {
 authForm.addEventListener("submit", async event => {
     event.preventDefault();
 
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+    const email = $("email").value.trim();
+    const password = $("password").value;
 
     errorMessage.textContent = "";
     authButton.disabled = true;
@@ -115,7 +135,7 @@ authForm.addEventListener("submit", async event => {
         };
 
         errorMessage.textContent =
-            messages[error.code] || "Authentication failed.";
+            messages[error.code] || `${error.code}: ${error.message}`;
     } finally {
         authButton.disabled = false;
     }
@@ -126,8 +146,7 @@ async function loadProfile(user) {
     profileStatus.textContent = "";
 
     try {
-        const profileRef = doc(db, "users", user.uid);
-        const profileSnap = await getDoc(profileRef);
+        const profileSnap = await getDoc(doc(db, "users", user.uid));
 
         if (currentUser?.uid !== user.uid) return;
 
@@ -141,9 +160,9 @@ async function loadProfile(user) {
             profileStatus.textContent = "Please choose your display name.";
         }
     } catch (error) {
-        console.error(error);
+        console.error("Profile error:", error);
         profileStatus.textContent =
-            "Unable to load profile. Check Firestore rules.";
+            `Unable to load profile: ${error.code || error.message}`;
     }
 }
 
@@ -160,41 +179,50 @@ profileForm.addEventListener("submit", async event => {
     }
 
     saveProfileButton.disabled = true;
-    profileStatus.textContent = "";
 
     try {
-        await setDoc(
-            doc(db, "users", currentUser.uid),
-            {
-                displayName: name,
-                updatedAt: serverTimestamp()
-            },
-            { merge: true }
-        );
+        await setDoc(doc(db, "users", currentUser.uid), {
+            displayName: name,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
 
         currentDisplayName = name;
         profileStatus.textContent = "Profile saved successfully!";
     } catch (error) {
-        console.error(error);
+        console.error("Save profile error:", error);
         profileStatus.textContent =
-            "Profile save failed. Check Firestore rules.";
+            `Profile save failed: ${error.code || error.message}`;
     } finally {
         saveProfileButton.disabled = false;
     }
 });
 
-function showMessages() {
-    if (unsubscribeMessages) unsubscribeMessages();
+function openChat(user) {
+    if (!currentUser || user.uid === currentUser.uid) return;
+
+    selectedUser = user;
+    stopMessages();
+
+    chatBox.replaceChildren();
+    showStatus("");
+
+    $("chatTitle").textContent = `CHATX Chat — ${user.displayName}`;
+    $("chatSubtitle").textContent = `Private conversation with ${user.displayName}`;
+
+    const generation = messageGeneration;
+    const conversationId = getConversationId(currentUser.uid, user.uid);
 
     const messagesQuery = query(
         collection(db, "messages"),
-        orderBy("createdAt", "asc"),
-        limit(100)
+        where("conversationId", "==", conversationId),
+        orderBy("createdAt", "asc")
     );
 
     unsubscribeMessages = onSnapshot(
         messagesQuery,
         snapshot => {
+            if (generation !== messageGeneration) return;
+
             chatBox.replaceChildren();
 
             snapshot.forEach(messageDoc => {
@@ -205,22 +233,30 @@ function showMessages() {
 
                 const sender = document.createElement("small");
                 sender.textContent =
-                    message.displayName || "CHATX User";
+                    message.uid === currentUser.uid
+                        ? "You"
+                        : message.displayName || user.displayName;
 
-                const text = document.createElement("div");
-                text.textContent = message.text || "";
+                const body = document.createElement("div");
+                body.textContent = message.text || "";
 
-                item.append(sender, text);
+                item.append(sender, body);
                 chatBox.appendChild(item);
             });
 
+            if (snapshot.empty) {
+                chatBox.textContent = "No messages yet. Say hello!";
+            }
+
             chatBox.scrollTop = chatBox.scrollHeight;
-            chatStatus.textContent = "";
+            showStatus("");
         },
         error => {
-            console.error(error);
-            chatStatus.textContent =
-                "Unable to load messages. Check Firestore rules.";
+            console.error("Load messages error:", error);
+
+            showStatus(
+                `Unable to load messages: ${error.code || error.message}`
+            );
         }
     );
 }
@@ -228,39 +264,63 @@ function showMessages() {
 chatForm.addEventListener("submit", async event => {
     event.preventDefault();
 
+    if (!currentUser || !selectedUser) {
+        showStatus("Select a person from the People list first.");
+        return;
+    }
+
     const text = messageInput.value.trim();
 
-    if (!text || !currentUser) return;
+    if (!text) return;
 
     if (!currentDisplayName) {
-        chatStatus.textContent = "Save your profile name first.";
+        showStatus("Save your profile name first.");
+        return;
+    }
+
+    if (text.length > 1000) {
+        showStatus("Message must be 1000 characters or fewer.");
         return;
     }
 
     sendButton.disabled = true;
-    chatStatus.textContent = "";
 
     try {
+        const participants = [
+            currentUser.uid,
+            selectedUser.uid
+        ].sort();
+
+        const conversationId = participants.join("_");
+
         await addDoc(collection(db, "messages"), {
             text,
             uid: currentUser.uid,
             displayName: currentDisplayName,
+            conversationId,
+            participants,
             createdAt: serverTimestamp()
         });
 
         messageInput.value = "";
+        showStatus("");
         messageInput.focus();
     } catch (error) {
-        console.error(error);
-        chatStatus.textContent =
-            "Message failed to send. Check Firestore rules.";
+        console.error("Send message error:", error);
+
+        showStatus(
+            `Message failed: ${error.code || error.message}`
+        );
     } finally {
         sendButton.disabled = false;
     }
 });
 
 function showUsers() {
-    if (unsubscribeUsers) unsubscribeUsers();
+    if (unsubscribeUsers) {
+        unsubscribeUsers();
+        unsubscribeUsers = null;
+    }
 
     usersList.replaceChildren();
 
@@ -272,51 +332,72 @@ function showUsers() {
             let count = 0;
 
             snapshot.forEach(userDoc => {
-                const user = userDoc.data();
+                if (userDoc.id === currentUser?.uid) return;
 
-                if (!user.displayName) return;
+                const userData = userDoc.data();
+
+                if (!userData.displayName) return;
 
                 count++;
 
-                const item = document.createElement("div");
+                const item = document.createElement("button");
+                item.type = "button";
                 item.className = "message";
+                item.style.width = "100%";
+                item.style.textAlign = "left";
+                item.style.cursor = "pointer";
 
                 const name = document.createElement("strong");
-                name.textContent = user.displayName;
+                name.textContent = userData.displayName;
 
                 item.appendChild(name);
+
+                item.addEventListener("click", () => {
+                    openChat({
+                        uid: userDoc.id,
+                        displayName: userData.displayName
+                    });
+                });
+
                 usersList.appendChild(item);
             });
 
             if (count === 0) {
-                usersList.textContent = "No profiles found yet.";
+                usersList.textContent =
+                    "No other users yet. Create a second account to test chat.";
             }
         },
         error => {
-            console.error(error);
+            console.error("Load users error:", error);
+
             usersList.textContent =
-                "Unable to load users. Check Firestore rules.";
+                `Unable to load users: ${error.code || error.message}`;
         }
     );
 }
 
-document.getElementById("logoutButton").addEventListener("click", async () => {
+$("logoutButton").addEventListener("click", async () => {
     try {
+        stopMessages();
+
+        if (unsubscribeUsers) {
+            unsubscribeUsers();
+            unsubscribeUsers = null;
+        }
+
         await signOut(auth);
     } catch (error) {
-        console.error(error);
-        chatStatus.textContent = "Unable to log out.";
+        console.error("Logout error:", error);
+        showStatus("Unable to log out.");
     }
 });
 
 onAuthStateChanged(auth, async user => {
     currentUser = user;
     currentDisplayName = "";
+    selectedUser = null;
 
-    if (unsubscribeMessages) {
-        unsubscribeMessages();
-        unsubscribeMessages = null;
-    }
+    stopMessages();
 
     if (unsubscribeUsers) {
         unsubscribeUsers();
@@ -327,12 +408,16 @@ onAuthStateChanged(auth, async user => {
         authSection.classList.add("hidden");
         dashboard.classList.remove("hidden");
 
-        document.getElementById("userEmail").textContent = user.email || "";
+        $("userEmail").textContent = user.email || "";
+        $("chatTitle").textContent = "CHATX Chat";
+        $("chatSubtitle").textContent = "Select a user to start chatting.";
+
+        chatBox.replaceChildren();
+        showStatus("");
 
         await loadProfile(user);
 
         if (currentUser?.uid === user.uid) {
-            showMessages();
             showUsers();
         }
     } else {
@@ -344,7 +429,7 @@ onAuthStateChanged(auth, async user => {
         chatBox.replaceChildren();
         usersList.replaceChildren();
 
-        chatStatus.textContent = "";
+        showStatus("");
         profileStatus.textContent = "";
         displayNameInput.value = "";
     }
