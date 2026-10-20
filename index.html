@@ -1,84 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CHATX - Premium</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  body{background:#0b141a;color:#e9edef;margin:0;font-family:Inter,sans-serif}
-  .scroll::-webkit-scrollbar{width:4px}.scroll::-webkit-scrollbar-thumb{background:#374045;border-radius:10px}
-  .msg-me{background:#005c4b;border-radius:12px 12px 0 12px}
-  .msg-other{background:#202c33;border-radius:12px 12px 12px 0}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHATX Messenger</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="h-screen flex">
+<body>
 
-<div id="mainApp" class="w-full md:w-[400px] bg-[#111b21] flex flex-col border-r border-[#222d34] hidden">
-  <div class="bg-[#202c33] h-[64px] flex items-center justify-between px-4">
-    <h1 class="text-[19px] font-bold">CHATX</h1>
-    <button id="logoutBtn" class="bg-[#00a884] text-white text-[12px] px-4 py-1.5 rounded-full">Logout</button>
-  </div>
-  <div class="p-3"><div class="bg-[#202c33] rounded-lg flex items-center px-3 h-[40px]">
-    <span class="text-[#8696a0]">⌕</span><input id="searchInput" placeholder="Search people..." class="bg-transparent ml-3 w-full outline-none text-[14px]">
-  </div></div>
-  <div class="px-4 py-3 border-b border-[#222d34]">
-    <p id="myEmail" class="text-[11px] text-[#8696a0]">loading...</p>
-    <div class="flex gap-2 mt-2">
-      <input id="displayName" placeholder="Your name" class="flex-1 bg-[#202c33] rounded-lg px-3 py-2 text-[13px] outline-none">
-      <button id="saveProfile" class="bg-[#00a884] text-[12px] px-4 rounded-lg">Save</button>
-    </div>
-  </div>
-  <div id="userList" class="flex-1 overflow-y-auto scroll"></div>
-</div>
+    <header class="app-header">
+        <h1>CHATX</h1>
+        <p>Connect. Chat. Share.</p>
+    </header>
 
-<div class="flex-1 bg-[#0b141a] flex flex-col">
-  <div id="welcomeScreen" class="flex-1 flex flex-col items-center justify-center text-center p-8">
-    <div class="w-24 h-24 bg-[#00a884] rounded-full flex items-center justify-center text-3xl font-bold">C</div>
-    <h2 class="text-[28px] font-light mt-6">Welcome to CHATX</h2>
-    <p class="text-[#8696a0] text-[13px] mt-2">Select a person from left to chat</p>
-  </div>
-  <div id="chatHeader" class="hidden bg-[#202c33] h-[64px] flex items-center gap-3 px-4">
-    <div id="chatAvatar" class="w-9 h-9 bg-[#00a884] rounded-full flex items-center justify-center font-bold">A</div>
-    <div><p id="chatName" class="font-semibold">User</p><p class="text-[11px] text-[#8696a0]">online</p></div>
-  </div>
-  <div id="messages" class="hidden flex-1 overflow-y-auto p-4 space-y-1 scroll"></div>
-  <div id="chatInputArea" class="hidden bg-[#202c33] p-3 flex gap-3">
-    <input id="msgInput" placeholder="Type a message" class="flex-1 bg-[#2a3942] rounded-full px-5 py-2.5 outline-none text-[14px]">
-    <button id="sendBtn" class="bg-[#00a884] w-10 h-10 rounded-full">➤</button>
-  </div>
-</div>
+    <main class="container">
 
-<div id="loginScreen" class="fixed inset-0 bg-[#111b21] z-50 flex items-center justify-center p-5">
-  <div class="w-full max-w-[360px]">
-    <h1 class="text-[30px] font-bold">CHATX</h1>
-    <p class="text-[#8696a0] text-[13px] mb-7">Connect. Chat. Repeat.</p>
-    <input id="email" type="email" placeholder="Email" class="w-full bg-[#202c33] p-3 rounded-lg mb-3 outline-none">
-    <input id="password" type="password" placeholder="Password" class="w-full bg-[#202c33] p-3 rounded-lg mb-4 outline-none">
-    <button id="loginBtn" class="w-full bg-[#00a884] py-3 rounded-full font-semibold">Login</button>
-    <p id="authError" class="text-red-400 text-[12px] mt-3 hidden"></p>
-    <p class="text-[13px] mt-5 text-[#8696a0]">No account? <button id="signupBtn" class="text-[#00a884]">Sign up</button></p>
-  </div>
-</div>
+        <section id="authSection" class="card">
+            <h2 id="authTitle">Welcome Back</h2>
+            <p id="authMessage">Login to continue to CHATX</p>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+            <form id="authForm">
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Email address"
+                    autocomplete="email"
+                    required
+                >
 
-const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "PASTE_HERE",
-  projectId: "PASTE_HERE",
-  storageBucket: "PASTE_HERE",
-  messagingSenderId: "PASTE_HERE",
-  appId: "PASTE_HERE"
-};
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    required
+                >
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-// ... (baki ka logic file me hai)
-</script>
+                <button type="submit" id="authButton">Login</button>
+            </form>
+
+            <p id="errorMessage" class="status"></p>
+
+            <p>
+                <span id="switchLabel">Don't have an account?</span>
+                <button type="button" id="switchMode" class="text-button">
+                    Sign Up
+                </button>
+            </p>
+        </section>
+
+        <section id="dashboard" class="hidden">
+
+            <div class="card profile-card">
+                <h2>Your Profile</h2>
+
+                <p>
+                    Logged in as:
+                    <strong id="userEmail"></strong>
+                </p>
+
+                <form id="profileForm">
+                    <input
+                        type="text"
+                        id="displayName"
+                        placeholder="Choose your display name"
+                        maxlength="40"
+                        required
+                    >
+
+                    <button type="submit" id="saveProfileButton">
+                        Save Profile
+                    </button>
+                </form>
+
+                <p id="profileEmail"></p>
+                <p id="profileStatus" class="status"></p>
+            </div>
+
+            <div class="chat-layout">
+
+                <aside class="card users-card" id="usersSection">
+                    <h2>People</h2>
+                    <p>Choose someone to chat with.</p>
+
+                    <div id="usersList">
+                        <p>Loading users...</p>
+                    </div>
+                </aside>
+
+                <section class="card chat-card">
+                    <div class="chat-heading">
+                        <h2 id="chatTitle">CHATX Chat</h2>
+                        <p id="chatSubtitle">
+                            Select a user to start chatting.
+                        </p>
+                    </div>
+
+                    <div id="chatBox" class="chat-box">
+                        <p class="empty-message">
+                            Your messages will appear here.
+                        </p>
+                    </div>
+
+                    <form id="chatForm" class="chat-form">
+                        <input
+                            type="text"
+                            id="messageInput"
+                            placeholder="Type a message..."
+                            maxlength="1000"
+                            autocomplete="off"
+                            required
+                        >
+
+                        <button type="submit" id="sendButton">
+                            Send
+                        </button>
+                    </form>
+
+                    <p id="chatStatus" class="status"></p>
+                </section>
+
+            </div>
+
+            <button type="button" id="logoutButton" class="logout-button">
+                Logout
+            </button>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>CHATX Messenger &copy; 2026</p>
+    </footer>
+
+    <script type="module" src="./script.js"></script>
+
 </body>
 </html>
