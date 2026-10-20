@@ -1,25 +1,27 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 
 import {
     getAuth,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut
+    signOut,
+    onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
 import {
     getFirestore,
     collection,
-    doc,
-    setDoc,
-    getDoc,
     addDoc,
     query,
     where,
     orderBy,
     onSnapshot,
-    serverTimestamp
+    serverTimestamp,
+    doc,
+    getDoc,
+    setDoc
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -38,341 +40,43 @@ const db = getFirestore(app);
 
 const $ = id => document.getElementById(id);
 
+const authSection = $("authSection");
+const dashboard = $("dashboard");
+const authForm = $("authForm");
+const authTitle = $("authTitle");
+const authMessage = $("authMessage");
+const authButton = $("authButton");
+const switchMode = $("switchMode");
+const switchLabel = $("switchLabel");
+const errorMessage = $("errorMessage");
+
+const chatBox = $("chatBox");
+const chatForm = $("chatForm");
+const messageInput = $("messageInput");
+const sendButton = $("sendButton");
+const chatStatus = $("chatStatus");
+
+const profileForm = $("profileForm");
+const displayNameInput = $("displayName");
+const profileEmail = $("profileEmail");
+const profileStatus = $("profileStatus");
+const saveProfileButton = $("saveProfileButton");
+
+const usersList = $("usersList");
+
+let isSignup = false;
 let currentUser = null;
 let currentDisplayName = "";
 let selectedUser = null;
-let isSignup = false;
-
 let unsubscribeMessages = null;
 let unsubscribeUsers = null;
-
-let allUsers = [];
 let messageGeneration = 0;
 
-function setStatus(id, message, isError = false) {
-    const element = $(id);
-
-    if (!element) return;
-
-    element.textContent = message;
-    element.style.color = isError ? "#ff7777" : "#55d6a5";
+function showStatus(message) {
+    chatStatus.textContent = message;
 }
 
-function showError(error, location = "errorMessage") {
-    console.error(error);
-
-    const messages = {
-        "auth/email-already-in-use": "This email already has an account.",
-        "auth/invalid-email": "Please enter a valid email address.",
-        "auth/invalid-credential": "Email or password is incorrect.",
-        "auth/user-not-found": "No account found. Please sign up.",
-        "auth/wrong-password": "Incorrect password.",
-        "auth/weak-password": "Use a stronger password with at least 6 characters.",
-        "auth/too-many-requests": "Too many attempts. Please try again later.",
-        "permission-denied": "Permission denied. Check your Firestore security rules.",
-        "unavailable": "Network issue. Please check your internet connection."
-    };
-
-    const message =
-        messages[error.code] ||
-        error.message ||
-        "Something went wrong.";
-
-    setStatus(location, message, true);
-}
-
-function setAvatar(element, name) {
-    element.textContent = (name || "C").trim().charAt(0).toUpperCase() || "C";
-}
-
-function getConversationId(uid1, uid2) {
-    return [uid1, uid2].sort().join("_");
-}
-
-function formatTime(timestamp) {
-    if (!timestamp || typeof timestamp.toDate !== "function") {
-        return "";
-    }
-
-    return timestamp.toDate().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-}
-
-/* LOGIN / SIGNUP */
-
-$("switchMode").addEventListener("click", () => {
-    isSignup = !isSignup;
-
-    $("authTitle").textContent = isSignup ? "Create Account" : "Login";
-    $("authButton").textContent = isSignup ? "Sign Up" : "Login";
-    $("switchLabel").textContent = isSignup
-        ? "Already have an account?"
-        : "Don't have an account?";
-
-    $("switchMode").textContent = isSignup ? "Login" : "Sign up";
-    $("password").autocomplete = isSignup
-        ? "new-password"
-        : "current-password";
-
-    setStatus("errorMessage", "");
-    setStatus("authMessage", "");
-});
-
-$("authForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const email = $("email").value.trim();
-    const password = $("password").value;
-
-    $("authButton").disabled = true;
-    $("authButton").textContent = "Please wait...";
-
-    setStatus("errorMessage", "");
-    setStatus("authMessage", "");
-
-    try {
-        if (isSignup) {
-            await createUserWithEmailAndPassword(auth, email, password);
-        } else {
-            await signInWithEmailAndPassword(auth, email, password);
-        }
-    } catch (error) {
-        showError(error);
-    } finally {
-        $("authButton").disabled = false;
-        $("authButton").textContent = isSignup ? "Sign Up" : "Login";
-    }
-});
-
-/* AUTH STATE */
-
-onAuthStateChanged(auth, async user => {
-    stopListeners();
-
-    if (!user) {
-        currentUser = null;
-        currentDisplayName = "";
-        selectedUser = null;
-        allUsers = [];
-
-        $("dashboard").classList.add("hidden");
-        $("dashboard").classList.remove("chat-open");
-        $("authSection").classList.remove("hidden");
-
-        $("chatBox").replaceChildren();
-        $("usersList").replaceChildren();
-
-        return;
-    }
-
-    currentUser = user;
-
-    $("authSection").classList.add("hidden");
-    $("dashboard").classList.remove("hidden");
-    $("dashboard").classList.remove("chat-open");
-
-    $("userEmail").textContent = user.email || "";
-
-    await loadProfile(user);
-
-    $("myDisplayName").textContent =
-        currentDisplayName || "Your Profile";
-
-    setAvatar($("myAvatar"), currentDisplayName);
-
-    $("chatWelcome").classList.remove("hidden");
-    $("activeChat").classList.add("hidden");
-
-    selectedUser = null;
-
-    startUsersListener();
-});
-
-/* PROFILE */
-
-async function loadProfile(user) {
-    const userRef = doc(db, "users", user.uid);
-
-    try {
-        const snapshot = await getDoc(userRef);
-
-        if (snapshot.exists()) {
-            const data = snapshot.data();
-
-            currentDisplayName =
-                data.displayName ||
-                user.email?.split("@")[0] ||
-                "User";
-        } else {
-            currentDisplayName = user.email?.split("@")[0] || "User";
-
-            await setDoc(userRef, {
-                displayName: currentDisplayName,
-                uid: user.uid,
-                createdAt: serverTimestamp()
-            });
-        }
-
-        $("displayName").value = currentDisplayName;
-        $("myDisplayName").textContent = currentDisplayName;
-
-        setAvatar($("myAvatar"), currentDisplayName);
-    } catch (error) {
-        showError(error, "profileStatus");
-
-        currentDisplayName = user.email?.split("@")[0] || "User";
-        $("displayName").value = currentDisplayName;
-        $("myDisplayName").textContent = currentDisplayName;
-
-        setAvatar($("myAvatar"), currentDisplayName);
-    }
-}
-
-$("profileForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    if (!currentUser) return;
-
-    const name = $("displayName").value.trim();
-
-    if (!name || name.length > 40) {
-        setStatus("profileStatus", "Name must contain 1–40 characters.", true);
-        return;
-    }
-
-    $("saveProfileButton").disabled = true;
-    setStatus("profileStatus", "Saving...");
-
-    try {
-        await setDoc(
-            doc(db, "users", currentUser.uid),
-            {
-                displayName: name,
-                uid: currentUser.uid,
-                email: currentUser.email || ""
-            },
-            { merge: true }
-        );
-
-        currentDisplayName = name;
-
-        $("myDisplayName").textContent = name;
-        setAvatar($("myAvatar"), name);
-
-        setStatus("profileStatus", "Profile saved successfully.");
-
-        startUsersListener();
-    } catch (error) {
-        showError(error, "profileStatus");
-    } finally {
-        $("saveProfileButton").disabled = false;
-    }
-});
-
-/* CONTACT LIST */
-
-function startUsersListener() {
-    if (!currentUser) return;
-
-    if (unsubscribeUsers) {
-        unsubscribeUsers();
-    }
-
-    const usersQuery = query(collection(db, "users"));
-
-    unsubscribeUsers = onSnapshot(
-        usersQuery,
-        snapshot => {
-            allUsers = [];
-
-            snapshot.forEach(userDoc => {
-                if (userDoc.id === currentUser.uid) return;
-
-                const data = userDoc.data();
-
-                allUsers.push({
-                    uid: userDoc.id,
-                    displayName: data.displayName || "User",
-                    email: data.email || ""
-                });
-            });
-
-            renderUsers();
-        },
-        error => {
-            showError(error, "profileStatus");
-
-            $("usersList").textContent =
-                "Unable to load people. Check Firestore rules.";
-        }
-    );
-}
-
-function renderUsers() {
-    const container = $("usersList");
-    const search = $("userSearch").value.trim().toLowerCase();
-
-    container.replaceChildren();
-
-    const filteredUsers = allUsers.filter(user => {
-        return (
-            user.displayName.toLowerCase().includes(search) ||
-            user.email.toLowerCase().includes(search)
-        );
-    });
-
-    $("contactCount").textContent = filteredUsers.length;
-
-    if (filteredUsers.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "empty-text";
-        empty.textContent = search
-            ? "No matching people found."
-            : "No other users yet. Ask a friend to create an account.";
-
-        container.appendChild(empty);
-        return;
-    }
-
-    filteredUsers.forEach(user => {
-        const button = document.createElement("button");
-
-        button.type = "button";
-        button.className = "contact-button";
-
-        if (selectedUser?.uid === user.uid) {
-            button.classList.add("selected");
-        }
-
-        const avatar = document.createElement("div");
-        avatar.className = "contact-avatar";
-        setAvatar(avatar, user.displayName);
-
-        const details = document.createElement("div");
-        details.className = "contact-details";
-
-        const name = document.createElement("strong");
-        name.textContent = user.displayName;
-
-        const email = document.createElement("small");
-        email.textContent = user.email || "CHATX member";
-
-        details.append(name, email);
-        button.append(avatar, details);
-
-        button.addEventListener("click", () => openChat(user));
-
-        container.appendChild(button);
-    });
-}
-
-$("userSearch").addEventListener("input", renderUsers);
-
-/* OPEN CHAT */
-
-function stopMessageListener() {
+function stopMessages() {
     messageGeneration++;
 
     if (unsubscribeMessages) {
@@ -381,166 +85,437 @@ function stopMessageListener() {
     }
 }
 
-function stopListeners() {
-    stopMessageListener();
+function getConversationId(uid1, uid2) {
+    return [uid1, uid2].sort().join("_");
+}
 
-    if (unsubscribeUsers) {
-        unsubscribeUsers();
-        unsubscribeUsers = null;
+switchMode.addEventListener("click", () => {
+    isSignup = !isSignup;
+
+    authTitle.textContent = isSignup
+        ? "Create Account"
+        : "Welcome Back";
+
+    authMessage.textContent = isSignup
+        ? "Create your CHATX account"
+        : "Login to continue to CHATX";
+
+    authButton.textContent = isSignup
+        ? "Sign Up"
+        : "Login";
+
+    switchLabel.textContent = isSignup
+        ? "Already have an account?"
+        : "Don't have an account?";
+
+    switchMode.textContent = isSignup
+        ? "Login"
+        : "Sign Up";
+
+    $("password").autocomplete = isSignup
+        ? "new-password"
+        : "current-password";
+
+    errorMessage.textContent = "";
+});
+
+authForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const email = $("email").value.trim();
+    const password = $("password").value;
+
+    errorMessage.textContent = "";
+    authButton.disabled = true;
+
+    try {
+        if (isSignup) {
+            await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+        } else {
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+        }
+    } catch (error) {
+        const messages = {
+            "auth/email-already-in-use":
+                "Email already registered.",
+
+            "auth/invalid-email":
+                "Enter a valid email.",
+
+            "auth/invalid-credential":
+                "Incorrect email or password.",
+
+            "auth/weak-password":
+                "Choose a stronger password.",
+
+            "auth/network-request-failed":
+                "Check your internet connection.",
+
+            "auth/too-many-requests":
+                "Too many attempts. Try again later."
+        };
+
+        errorMessage.textContent =
+            messages[error.code] ||
+            `${error.code}: ${error.message}`;
+    } finally {
+        authButton.disabled = false;
+    }
+});
+
+async function loadProfile(user) {
+    profileEmail.textContent = user.email || "";
+    profileStatus.textContent = "";
+
+    try {
+        const profileSnap = await getDoc(
+            doc(db, "users", user.uid)
+        );
+
+        if (currentUser?.uid !== user.uid) return;
+
+        currentDisplayName = profileSnap.exists()
+            ? profileSnap.data().displayName || ""
+            : "";
+
+        displayNameInput.value = currentDisplayName;
+
+        if (!currentDisplayName) {
+            profileStatus.textContent =
+                "Please choose your display name.";
+        }
+    } catch (error) {
+        console.error("Profile error:", error);
+
+        profileStatus.textContent =
+            `Unable to load profile: ${error.code || error.message}`;
     }
 }
 
-function openChat(user) {
-    if (!currentUser || user.uid === currentUser.uid) return;
+profileForm.addEventListener("submit", async event => {
+    event.preventDefault();
 
-    stopMessageListener();
+    if (!currentUser) return;
+
+    const name = displayNameInput.value.trim();
+
+    if (!name || name.length > 40) {
+        profileStatus.textContent =
+            "Name must be 1–40 characters.";
+        return;
+    }
+
+    saveProfileButton.disabled = true;
+
+    try {
+        await setDoc(
+            doc(db, "users", currentUser.uid),
+            {
+                displayName: name,
+                updatedAt: serverTimestamp()
+            },
+            { merge: true }
+        );
+
+        currentDisplayName = name;
+
+        profileStatus.textContent =
+            "Profile saved successfully!";
+    } catch (error) {
+        console.error("Save profile error:", error);
+
+        profileStatus.textContent =
+            `Profile save failed: ${error.code || error.message}`;
+    } finally {
+        saveProfileButton.disabled = false;
+    }
+});
+
+function openChat(user) {
+    if (!currentUser || user.uid === currentUser.uid) {
+        return;
+    }
 
     selectedUser = user;
-    renderUsers();
 
-    $("chatWelcome").classList.add("hidden");
-    $("activeChat").classList.remove("hidden");
-    $("dashboard").classList.add("chat-open");
+    stopMessages();
 
-    $("chatTitle").textContent = user.displayName;
-    $("chatSubtitle").textContent = user.email || "CHATX member";
+    chatBox.replaceChildren();
+    showStatus("");
 
-    setAvatar($("chatAvatar"), user.displayName);
+    $("chatTitle").textContent =
+        `CHATX Chat — ${user.displayName}`;
 
-    $("chatBox").replaceChildren();
-
-    const loading = document.createElement("p");
-    loading.className = "empty-text";
-    loading.textContent = "Loading messages...";
-    $("chatBox").appendChild(loading);
+    $("chatSubtitle").textContent =
+        `Private conversation with ${user.displayName}`;
 
     const generation = messageGeneration;
-    const conversationId = getConversationId(currentUser.uid, user.uid);
+
+    const participants = [
+        currentUser.uid,
+        user.uid
+    ].sort();
+
+    const conversationId = getConversationId(
+        currentUser.uid,
+        user.uid
+    );
 
     const messagesQuery = query(
         collection(db, "messages"),
-        where("conversationId", "==", conversationId),
+        where("participants", "==", participants),
         orderBy("createdAt", "asc")
     );
 
     unsubscribeMessages = onSnapshot(
         messagesQuery,
         snapshot => {
-            if (generation !== messageGeneration) return;
-
-            const chatBox = $("chatBox");
-            chatBox.replaceChildren();
-
-            if (snapshot.empty) {
-                const empty = document.createElement("p");
-                empty.className = "empty-text";
-                empty.textContent = "No messages yet. Say hello!";
-                chatBox.appendChild(empty);
+            if (generation !== messageGeneration) {
                 return;
             }
 
+            chatBox.replaceChildren();
+
             snapshot.forEach(messageDoc => {
                 const message = messageDoc.data();
-                const bubble = document.createElement("div");
 
-                bubble.className =
-                    "message-bubble " +
-                    (message.uid === currentUser.uid ? "sent" : "received");
+                const item = document.createElement("div");
+                item.className = "message";
 
-                if (message.uid !== currentUser.uid) {
-                    const sender = document.createElement("span");
-                    sender.className = "message-sender";
-                    sender.textContent = message.displayName || "User";
-                    bubble.appendChild(sender);
-                }
+                const sender = document.createElement("small");
 
-                const text = document.createElement("div");
-                text.textContent = message.text || "";
+                sender.textContent =
+                    message.uid === currentUser.uid
+                        ? "You"
+                        : message.displayName || user.displayName;
 
-                const time = document.createElement("span");
-                time.className = "message-time";
-                time.textContent = formatTime(message.createdAt);
+                const body = document.createElement("div");
+                body.textContent = message.text || "";
 
-                bubble.append(text, time);
-                chatBox.appendChild(bubble);
+                item.append(sender, body);
+                chatBox.appendChild(item);
             });
 
+            if (snapshot.empty) {
+                chatBox.textContent =
+                    "No messages yet. Say hello!";
+            }
+
             chatBox.scrollTop = chatBox.scrollHeight;
+            showStatus("");
         },
         error => {
-            if (generation !== messageGeneration) return;
+            console.error("Load messages error:", error);
 
-            showError(error, "chatStatus");
-            $("chatBox").replaceChildren();
-
-            const errorText = document.createElement("p");
-            errorText.className = "empty-text";
-            errorText.textContent =
-                "Unable to load messages. Check Firestore rules and indexes.";
-
-            $("chatBox").appendChild(errorText);
+            showStatus(
+                `Unable to load messages: ${error.code || error.message}`
+            );
         }
     );
 }
 
-/* SEND MESSAGE */
-
-$("chatForm").addEventListener("submit", async event => {
+chatForm.addEventListener("submit", async event => {
     event.preventDefault();
 
     if (!currentUser || !selectedUser) {
-        setStatus("chatStatus", "Please select a person first.", true);
+        showStatus(
+            "Select a person from the People list first."
+        );
         return;
     }
 
-    const text = $("messageInput").value.trim();
+    const text = messageInput.value.trim();
 
     if (!text) return;
 
-    if (text.length > 1000) {
-        setStatus("chatStatus", "Message is too long.", true);
+    if (!currentDisplayName) {
+        showStatus("Save your profile name first.");
         return;
     }
 
-    const conversationId = getConversationId(
-        currentUser.uid,
-        selectedUser.uid
-    );
+    if (text.length > 1000) {
+        showStatus(
+            "Message must be 1000 characters or fewer."
+        );
+        return;
+    }
 
-    const participants = [
-        currentUser.uid,
-        selectedUser.uid
-    ].sort();
-
-    $("sendButton").disabled = true;
-    setStatus("chatStatus", "Sending...");
+    sendButton.disabled = true;
 
     try {
-        await addDoc(collection(db, "messages"), {
-            text,
-            uid: currentUser.uid,
-            displayName: currentDisplayName || "User",
-            conversationId,
-            participants,
-            createdAt: serverTimestamp()
-        });
+        const participants = [
+            currentUser.uid,
+            selectedUser.uid
+        ].sort();
 
-        $("messageInput").value = "";
-        setStatus("chatStatus", "");
-        $("messageInput").focus();
+        const conversationId = getConversationId(
+            currentUser.uid,
+            selectedUser.uid
+        );
+
+        await addDoc(
+            collection(db, "messages"),
+            {
+                text: text,
+                uid: currentUser.uid,
+                displayName: currentDisplayName,
+                conversationId: conversationId,
+                participants: participants,
+                createdAt: serverTimestamp()
+            }
+        );
+
+        messageInput.value = "";
+        showStatus("");
+        messageInput.focus();
     } catch (error) {
-        showError(error, "chatStatus");
+        console.error("Send message error:", error);
+
+        showStatus(
+            `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
+        );
+
+        alert(
+            `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
+        );
     } finally {
-        $("sendButton").disabled = false;
+        sendButton.disabled = false;
     }
 });
 
-/* LOGOUT */
+function showUsers() {
+    if (unsubscribeUsers) {
+        unsubscribeUsers();
+        unsubscribeUsers = null;
+    }
+
+    usersList.replaceChildren();
+
+    unsubscribeUsers = onSnapshot(
+        collection(db, "users"),
+        snapshot => {
+            usersList.replaceChildren();
+
+            let count = 0;
+
+            snapshot.forEach(userDoc => {
+                if (userDoc.id === currentUser?.uid) {
+                    return;
+                }
+
+                const userData = userDoc.data();
+
+                if (!userData.displayName) {
+                    return;
+                }
+
+                count++;
+
+                const item = document.createElement("button");
+
+                item.type = "button";
+                item.className = "message";
+                item.style.width = "100%";
+                item.style.textAlign = "left";
+                item.style.cursor = "pointer";
+
+                const name = document.createElement("strong");
+
+                name.textContent = userData.displayName;
+
+                item.appendChild(name);
+
+                item.addEventListener("click", () => {
+                    openChat({
+                        uid: userDoc.id,
+                        displayName: userData.displayName
+                    });
+                });
+
+                usersList.appendChild(item);
+            });
+
+            if (count === 0) {
+                usersList.textContent =
+                    "No other users yet. Create a second account to test chat.";
+            }
+        },
+        error => {
+            console.error("Load users error:", error);
+
+            usersList.textContent =
+                `Unable to load users: ${error.code || error.message}`;
+        }
+    );
+}
 
 $("logoutButton").addEventListener("click", async () => {
     try {
+        stopMessages();
+
+        if (unsubscribeUsers) {
+            unsubscribeUsers();
+            unsubscribeUsers = null;
+        }
+
         await signOut(auth);
     } catch (error) {
-        showError(error, "profileStatus");
+        console.error("Logout error:", error);
+
+        showStatus("Unable to log out.");
+    }
+});
+
+onAuthStateChanged(auth, async user => {
+    currentUser = user;
+    currentDisplayName = "";
+    selectedUser = null;
+
+    stopMessages();
+
+    if (unsubscribeUsers) {
+        unsubscribeUsers();
+        unsubscribeUsers = null;
+    }
+
+    if (user) {
+        authSection.classList.add("hidden");
+        dashboard.classList.remove("hidden");
+
+        $("userEmail").textContent = user.email || "";
+        $("chatTitle").textContent = "CHATX Chat";
+        $("chatSubtitle").textContent =
+            "Select a user to start chatting.";
+
+        chatBox.replaceChildren();
+        showStatus("");
+
+        await loadProfile(user);
+
+        if (currentUser?.uid === user.uid) {
+            showUsers();
+        }
+    } else {
+        dashboard.classList.add("hidden");
+        authSection.classList.remove("hidden");
+
+        authForm.reset();
+        chatForm.reset();
+
+        chatBox.replaceChildren();
+        usersList.replaceChildren();
+
+        showStatus("");
+
+        profileStatus.textContent = "";
+        displayNameInput.value = "";
     }
 });
