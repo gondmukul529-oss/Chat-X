@@ -305,12 +305,15 @@ chatForm.addEventListener("submit", async event => {
         messageInput.value = "";
         showStatus("");
         messageInput.focus();
-    } catch (error) {
-        console.error("Send message error:", error);
+    }  catch (error) {
+    console.error("Send message error:", error);
 
-        showStatus(
-            `Message failed: ${error.code || error.message}`
-        );
+    showStatus(
+        `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
+    );
+    alert(
+        `Message failed: ${error.code || "unknown"} - ${error.message || "Unknown error"}`
+    );
     } finally {
         sendButton.disabled = false;
     }
