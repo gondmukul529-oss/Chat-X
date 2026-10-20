@@ -73,20 +73,34 @@ let unsubscribeMessages = null;
 let unsubscribeUsers = null;
 let chatRequest = 0;
 
+function showError(prefix, error) {
+    console.error(prefix, error);
+
+    const code = error?.code || "unknown";
+    const message = error?.message || "Unknown error";
+
+    return `${prefix} [${code}]: ${message}`;
+}
+
 switchMode.addEventListener("click", () => {
     isSignup = !isSignup;
 
-    authTitle.textContent = isSignup ? "Create Account" : "Welcome Back";
+    authTitle.textContent = isSignup
+        ? "Create Account"
+        : "Welcome Back";
+
     authMessage.textContent = isSignup
         ? "Create your CHATX account"
         : "Login to continue to CHATX";
 
     authButton.textContent = isSignup ? "Sign Up" : "Login";
+
     switchLabel.textContent = isSignup
         ? "Already have an account?"
         : "Don't have an account?";
 
     switchMode.textContent = isSignup ? "Login" : "Sign Up";
+
     $("password").autocomplete = isSignup
         ? "new-password"
         : "current-password";
@@ -105,9 +119,17 @@ authForm.addEventListener("submit", async event => {
 
     try {
         if (isSignup) {
-            await createUserWithEmailAndPassword(auth, email, password);
+            await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
         } else {
-            await signInWithEmailAndPassword(auth, email, password);
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
         }
     } catch (error) {
         const messages = {
@@ -120,7 +142,7 @@ authForm.addEventListener("submit", async event => {
         };
 
         errorMessage.textContent =
-            messages[error.code] || "Login or signup failed.";
+            messages[error.code] || showError("Login failed", error);
     } finally {
         authButton.disabled = false;
     }
@@ -136,4 +158,36 @@ async function loadProfile(user) {
 
         if (currentUser?.uid !== user.uid) return;
 
-        currentDisplayName = profile
+        currentDisplayName = profileSnap.exists()
+            ? profileSnap.data().displayName || ""
+            : "";
+
+        displayNameInput.value = currentDisplayName;
+
+        if (!currentDisplayName) {
+            profileStatus.textContent =
+                "Please choose your display name.";
+        }
+    } catch (error) {
+        profileStatus.textContent =
+            showError("Profile load failed", error);
+    }
+}
+
+profileForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!currentUser) return;
+
+    const name = displayNameInput.value.trim();
+
+    if (!name || name.length > 40) {
+        profileStatus.textContent =
+            "Name must be 1–40 characters.";
+        return;
+    }
+
+    saveProfileButton.disabled = true;
+    profileStatus.textContent = "";
+
+    try
