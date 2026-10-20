@@ -6,88 +6,79 @@
 <title>CHATX - Premium</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { background:#0b141a; color:#e9edef; font-family: 'Segoe UI', sans-serif; }
-  .chat-bg { background-color: #0b141a; background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png"); opacity:0.05; }
-  .scroll::-webkit-scrollbar { width:5px; } .scroll::-webkit-scrollbar-thumb { background:#374045; border-radius:10px; }
+  body{background:#0b141a;color:#e9edef;margin:0;font-family:Inter,sans-serif}
+  .scroll::-webkit-scrollbar{width:4px}.scroll::-webkit-scrollbar-thumb{background:#374045;border-radius:10px}
+  .msg-me{background:#005c4b;border-radius:12px 12px 0 12px}
+  .msg-other{background:#202c33;border-radius:12px 12px 12px 0}
 </style>
 </head>
-<body class="h-screen flex overflow-hidden">
+<body class="h-screen flex">
 
-<!-- LEFT SIDEBAR -->
-<div class="w-full md:w-[380px] bg-[#111b21] flex flex-col border-r border-[#222d34]">
-  <div class="bg-[#202c33] p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">CHATX</h1>
-    <button id="logoutBtn" class="text-sm bg-[#00a884] px-3 py-1 rounded-full">Logout</button>
+<div id="mainApp" class="w-full md:w-[400px] bg-[#111b21] flex flex-col border-r border-[#222d34] hidden">
+  <div class="bg-[#202c33] h-[64px] flex items-center justify-between px-4">
+    <h1 class="text-[19px] font-bold">CHATX</h1>
+    <button id="logoutBtn" class="bg-[#00a884] text-white text-[12px] px-4 py-1.5 rounded-full">Logout</button>
   </div>
-
-  <div class="p-3">
-    <div class="bg-[#202c33] rounded-lg flex items-center px-3 py-2">
-      <span class="text-[#8696a0]">⌕</span>
-      <input id="searchInput" type="text" placeholder="Search people..." class="bg-transparent ml-3 w-full outline-none text-sm">
-    </div>
-  </div>
-
-  <div class="px-3 py-2">
-    <p class="text-xs text-[#8696a0]">Mukul mukul98@gmail.com</p>
+  <div class="p-3"><div class="bg-[#202c33] rounded-lg flex items-center px-3 h-[40px]">
+    <span class="text-[#8696a0]">⌕</span><input id="searchInput" placeholder="Search people..." class="bg-transparent ml-3 w-full outline-none text-[14px]">
+  </div></div>
+  <div class="px-4 py-3 border-b border-[#222d34]">
+    <p id="myEmail" class="text-[11px] text-[#8696a0]">loading...</p>
     <div class="flex gap-2 mt-2">
-      <input id="displayName" type="text" placeholder="Your display name" class="flex-1 bg-[#202c33] rounded px-3 py-1.5 text-sm outline-none">
-      <button id="saveProfile" class="bg-[#00a884] text-xs px-3 rounded">Save</button>
+      <input id="displayName" placeholder="Your name" class="flex-1 bg-[#202c33] rounded-lg px-3 py-2 text-[13px] outline-none">
+      <button id="saveProfile" class="bg-[#00a884] text-[12px] px-4 rounded-lg">Save</button>
     </div>
   </div>
-
-  <div id="userList" class="flex-1 overflow-y-auto scroll mt-2"></div>
-  
-  <div class="p-3 text-[10px] text-[#8696a0]">CHATX © 2026</div>
+  <div id="userList" class="flex-1 overflow-y-auto scroll"></div>
 </div>
 
-<!-- RIGHT CHAT AREA -->
-<div class="flex-1 bg-[#0b141a] relative flex flex-col hidden md:flex">
-  <div id="welcomeScreen" class="flex-1 flex flex-col items-center justify-center text-center p-10">
-    <h2 class="text-3xl font-light">Welcome to CHATX</h2>
-    <p class="text-[#8696a0] mt-3 text-sm">Select a person from the left to start chatting.<br>Simple. Fast. Connected.</p>
-    <div class="mt-6 w-16 h-16 bg-[#00a884] rounded-full flex items-center justify-center text-2xl font-bold">C</div>
+<div class="flex-1 bg-[#0b141a] flex flex-col">
+  <div id="welcomeScreen" class="flex-1 flex flex-col items-center justify-center text-center p-8">
+    <div class="w-24 h-24 bg-[#00a884] rounded-full flex items-center justify-center text-3xl font-bold">C</div>
+    <h2 class="text-[28px] font-light mt-6">Welcome to CHATX</h2>
+    <p class="text-[#8696a0] text-[13px] mt-2">Select a person from left to chat</p>
   </div>
-
-  <div id="chatBox" class="hidden flex-1 flex-col">
-    <div class="bg-[#202c33] p-4 flex items-center gap-3">
-      <div id="chatAvatar" class="w-9 h-9 bg-[#00a884] rounded-full flex items-center justify-center font-bold">A</div>
-      <div><p id="chatName" class="font-semibold">Anurag</p><p class="text-xs text-[#8696a0]">online</p></div>
-    </div>
-    <div id="messages" class="flex-1 overflow-y-auto p-5 space-y-2 scroll bg-[#0b141a]"></div>
-    <div class="bg-[#202c33] p-3 flex gap-3 items-center">
-      <input id="msgInput" type="text" placeholder="Type a message" class="flex-1 bg-[#2a3942] rounded-full px-5 py-2.5 outline-none text-sm">
-      <button id="sendBtn" class="bg-[#00a884] w-10 h-10 rounded-full">➤</button>
-    </div>
+  <div id="chatHeader" class="hidden bg-[#202c33] h-[64px] flex items-center gap-3 px-4">
+    <div id="chatAvatar" class="w-9 h-9 bg-[#00a884] rounded-full flex items-center justify-center font-bold">A</div>
+    <div><p id="chatName" class="font-semibold">User</p><p class="text-[11px] text-[#8696a0]">online</p></div>
+  </div>
+  <div id="messages" class="hidden flex-1 overflow-y-auto p-4 space-y-1 scroll"></div>
+  <div id="chatInputArea" class="hidden bg-[#202c33] p-3 flex gap-3">
+    <input id="msgInput" placeholder="Type a message" class="flex-1 bg-[#2a3942] rounded-full px-5 py-2.5 outline-none text-[14px]">
+    <button id="sendBtn" class="bg-[#00a884] w-10 h-10 rounded-full">➤</button>
   </div>
 </div>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="fixed inset-0 bg-[#111b21] z-50 flex items-center justify-center p-4">
-  <div class="w-full max-w-sm">
-    <h1 class="text-3xl font-bold mb-1">CHATX</h1>
-    <p class="text-[#8696a0] mb-6 text-sm">Connect. Chat. Repeat.</p>
-    <h2 class="text-xl mb-4">Login</h2>
-    <input id="email" type="email" placeholder="Email address" class="w-full bg-[#202c33] p-3 rounded mb-3 outline-none text-sm">
-    <input id="password" type="password" placeholder="Password (minimum 6 chars)" class="w-full bg-[#202c33] p-3 rounded mb-3 outline-none text-sm">
-    <button id="loginBtn" class="w-full bg-[#00a884] py-2.5 rounded-full font-semibold">Login</button>
-    <p class="text-sm mt-4 text-[#8696a0]">Don't have an account? <button id="signupBtn" class="text-[#00a884]">Sign up</button></p>
+<div id="loginScreen" class="fixed inset-0 bg-[#111b21] z-50 flex items-center justify-center p-5">
+  <div class="w-full max-w-[360px]">
+    <h1 class="text-[30px] font-bold">CHATX</h1>
+    <p class="text-[#8696a0] text-[13px] mb-7">Connect. Chat. Repeat.</p>
+    <input id="email" type="email" placeholder="Email" class="w-full bg-[#202c33] p-3 rounded-lg mb-3 outline-none">
+    <input id="password" type="password" placeholder="Password" class="w-full bg-[#202c33] p-3 rounded-lg mb-4 outline-none">
+    <button id="loginBtn" class="w-full bg-[#00a884] py-3 rounded-full font-semibold">Login</button>
+    <p id="authError" class="text-red-400 text-[12px] mt-3 hidden"></p>
+    <p class="text-[13px] mt-5 text-[#8696a0]">No account? <button id="signupBtn" class="text-[#00a884]">Sign up</button></p>
   </div>
 </div>
 
 <script type="module">
- // === YAHAN APNA FIREBASE CONFIG PASTE KARNA ===
- // Tumhari purani file me jo firebaseConfig tha, usko yahan paste kar do
- const firebaseConfig = {
-   // ... tumhara config yahan ayega
- };
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
- // Baaki ka code same rahega, agar config sahi hoga to sab kaam karega
- import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
- import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
- import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
- 
- // Simple demo ke liye agar config nahi hai to bhi UI dikhega
- // Tum apni purani file ka JS logic yahan neeche copy kar sakte ho
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_HERE",
+  projectId: "PASTE_HERE",
+  storageBucket: "PASTE_HERE",
+  messagingSenderId: "PASTE_HERE",
+  appId: "PASTE_HERE"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+// ... (baki ka logic file me hai)
 </script>
 </body>
 </html>
