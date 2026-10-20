@@ -8,134 +8,55 @@
 </head>
 <body>
 
-    <header class="app-header">
-        <h1>CHATX</h1>
-        <p>Connect. Chat. Share.</p>
+<div class="app">
+    <header>
+        <h1>CHAT<span>X</span></h1>
+        <p>Connect. Chat. Repeat.</p>
     </header>
 
-    <main class="container">
+    <section id="authSection">
+        <h2 id="authTitle">Welcome Back</h2>
+        <p id="authMessage">Login to continue to CHATX</p>
 
-        <section id="authSection" class="card">
-            <h2 id="authTitle">Welcome Back</h2>
-            <p id="authMessage">Login to continue to CHATX</p>
+        <form id="authForm">
+            <input
+                type="email"
+                id="email"
+                placeholder="Email address"
+                autocomplete="email"
+                required
+            >
 
-            <form id="authForm">
-                <input
-                    type="email"
-                    id="email"
-                    placeholder="Email address"
-                    required
-                >
+            <input
+                type="password"
+                id="password"
+                placeholder="Password (minimum 6 characters)"
+                autocomplete="current-password"
+                minlength="6"
+                required
+            >
 
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Password"
-                    minlength="6"
-                    required
-                >
+            <button type="submit" id="authButton">Login</button>
+        </form>
 
-                <button type="submit" id="authButton">Login</button>
-            </form>
+        <p id="errorMessage" role="alert"></p>
 
-            <p id="errorMessage" class="status"></p>
+        <p class="switchText">
+            <span id="switchLabel">Don't have an account?</span>
+            <button type="button" id="switchMode">Sign Up</button>
+        </p>
+    </section>
 
-            <p>
-                <span id="switchLabel">Don't have an account?</span>
-                <button type="button" id="switchMode" class="text-button">
-                    Sign Up
-                </button>
-            </p>
-        </section>
+    <section id="dashboard" class="hidden">
+        <h2>Welcome to CHATX!</h2>
+        <p>Logged in as:</p>
+        <p id="userEmail"></p>
+        <button id="logoutButton">Logout</button>
+    </section>
 
-        <section id="dashboard" class="hidden">
+    <footer>CHATX © 2026</footer>
+</div>
 
-            <div class="card profile-card">
-                <h2>Your Profile</h2>
-
-                <p>
-                    Logged in as:
-                    <strong id="userEmail"></strong>
-                </p>
-
-                <form id="profileForm">
-                    <input
-                        type="text"
-                        id="displayName"
-                        placeholder="Choose your display name"
-                        maxlength="40"
-                        required
-                    >
-
-                    <button type="submit" id="saveProfileButton">
-                        Save Profile
-                    </button>
-                </form>
-
-                <p id="profileEmail"></p>
-                <p id="profileStatus" class="status"></p>
-            </div>
-
-            <div class="chat-layout">
-
-                <aside class="card users-card" id="usersSection">
-                    <h2>People</h2>
-                    <p>Choose someone to chat with.</p>
-
-                    <div id="usersList">
-                        <p>Loading users...</p>
-                    </div>
-                </aside>
-
-                <section class="card chat-card">
-                    <div class="chat-heading">
-                        <div>
-                            <h2 id="chatTitle">CHATX Chat</h2>
-                            <p id="chatSubtitle">
-                                Select a user to start chatting.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div id="chatBox" class="chat-box">
-                        <p class="empty-message">
-                            Your messages will appear here.
-                        </p>
-                    </div>
-
-                    <form id="chatForm" class="chat-form">
-                        <input
-                            type="text"
-                            id="messageInput"
-                            placeholder="Type a message..."
-                            maxlength="1000"
-                            autocomplete="off"
-                            required
-                        >
-
-                        <button type="submit" id="sendButton">
-                            Send
-                        </button>
-                    </form>
-
-                    <p id="chatStatus" class="status"></p>
-                </section>
-
-            </div>
-
-            <button type="button" id="logoutButton" class="logout-button">
-                Logout
-            </button>
-
-        </section>
-
-    </main>
-
-    <footer>
-        <p>CHATX Messenger &copy; 2026</p>
-    </footer>
-
-    <script type="module" src="script.js"></script>
-
+<script type="module" src="script.js"></script>
 </body>
 </html>
