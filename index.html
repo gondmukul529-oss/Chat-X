@@ -3,19 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#111b21">
     <title>CHATX Messenger</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
     <header class="app-header">
-        <h1>CHATX</h1>
-        <p>Connect. Chat. Share.</p>
+        <div class="brand">
+            <div class="brand-icon">C</div>
+            <div>
+                <h1>CHATX</h1>
+                <p>Connect. Chat. Share.</p>
+            </div>
+        </div>
     </header>
 
     <main class="container">
 
-        <section id="authSection" class="card">
+        <section id="authSection" class="card auth-card">
+            <div class="auth-logo">C</div>
             <h2 id="authTitle">Welcome Back</h2>
             <p id="authMessage">Login to continue to CHATX</p>
 
@@ -41,7 +48,7 @@
 
             <p id="errorMessage" class="status"></p>
 
-            <p>
+            <p class="auth-switch">
                 <span id="switchLabel">Don't have an account?</span>
                 <button type="button" id="switchMode" class="text-button">
                     Sign Up
@@ -49,51 +56,127 @@
             </p>
         </section>
 
-        <section id="dashboard" class="hidden">
+        <section id="dashboard" class="dashboard hidden">
 
-            <div class="card profile-card">
-                <h2>Your Profile</h2>
+            <aside class="sidebar">
 
-                <p>
-                    Logged in as:
-                    <strong id="userEmail"></strong>
-                </p>
+                <div class="sidebar-header">
+                    <div class="brand small-brand">
+                        <div class="brand-icon">C</div>
+                        <h2>CHATX</h2>
+                    </div>
 
-                <form id="profileForm">
+                    <button
+                        type="button"
+                        id="logoutButton"
+                        class="icon-button logout-icon"
+                        title="Logout"
+                        aria-label="Logout"
+                    >↪</button>
+                </div>
+
+                <div class="profile-mini">
+                    <div class="avatar my-avatar" id="myAvatar">C</div>
+
+                    <div class="profile-mini-info">
+                        <strong id="myDisplayName">Your Profile</strong>
+                        <span id="userEmail"></span>
+                    </div>
+                </div>
+
+                <details class="profile-settings">
+                    <summary>Edit profile</summary>
+
+                    <form id="profileForm">
+                        <label for="displayName">Display name</label>
+
+                        <input
+                            type="text"
+                            id="displayName"
+                            placeholder="Choose your display name"
+                            maxlength="40"
+                            required
+                        >
+
+                        <button type="submit" id="saveProfileButton">
+                            Save Profile
+                        </button>
+
+                        <p id="profileEmail" class="muted"></p>
+                        <p id="profileStatus" class="status"></p>
+                    </form>
+                </details>
+
+                <div class="sidebar-section-title">
+                    <h3>Chats</h3>
+                    <span class="online-dot"></span>
+                </div>
+
+                <div class="search-box">
+                    <span aria-hidden="true">⌕</span>
                     <input
-                        type="text"
-                        id="displayName"
-                        placeholder="Choose your display name"
-                        maxlength="40"
-                        required
+                        type="search"
+                        id="userSearch"
+                        placeholder="Search contacts"
+                        autocomplete="off"
                     >
+                </div>
 
-                    <button type="submit" id="saveProfileButton">
-                        Save Profile
-                    </button>
-                </form>
-
-                <p id="profileEmail"></p>
-                <p id="profileStatus" class="status"></p>
-            </div>
-
-            <div class="chat-layout">
-
-                <aside class="card users-card" id="usersSection">
-                    <h2>People</h2>
-                    <p>Choose someone to chat with.</p>
+                <div id="usersSection" class="contacts-section">
+                    <div class="contacts-heading">
+                        <span>ALL CONTACTS</span>
+                    </div>
 
                     <div id="usersList">
-                        <p>Loading users...</p>
+                        <p class="loading-text">Loading contacts...</p>
                     </div>
-                </aside>
+                </div>
 
-                <section class="card chat-card">
-                    <div class="chat-heading">
-                        <h2 id="chatTitle">CHATX Chat</h2>
-                        <p id="chatSubtitle">
-                            Select a user to start chatting.
-                        </p>
+            </aside>
+
+            <section class="chat-panel">
+
+                <div class="chat-welcome" id="chatWelcome">
+                    <div class="welcome-art">
+                        <div class="welcome-circle">
+                            <span>✉</span>
+                        </div>
+                    </div>
+
+                    <h2>Welcome to CHATX</h2>
+
+                    <p>
+                        Select a contact from the left to start
+                        a private conversation.
+                    </p>
+
+                    <div class="welcome-note">
+                        <span>🔒</span>
+                        Your conversations are designed to be private.
+                    </div>
+                </div>
+
+                <div class="active-chat hidden" id="activeChat">
+
+                    <div class="chat-topbar">
+                        <div class="chat-contact">
+                            <div class="avatar" id="chatAvatar">C</div>
+
+                            <div class="chat-contact-info">
+                                <h2 id="chatTitle">CHATX Chat</h2>
+                                <p id="chatSubtitle">
+                                    Select a contact to start chatting.
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="icon-button"
+                            id="chatInfoButton"
+                            title="Conversation information"
+                            aria-label="Conversation information"
+                        >ⓘ</button>
                     </div>
 
                     <div id="chatBox" class="chat-box">
@@ -101,6 +184,8 @@
                             Your messages will appear here.
                         </p>
                     </div>
+
+                    <p id="chatStatus" class="status chat-status"></p>
 
                     <form id="chatForm" class="chat-form">
                         <input
@@ -112,19 +197,20 @@
                             required
                         >
 
-                        <button type="submit" id="sendButton">
-                            Send
+                        <button
+                            type="submit"
+                            id="sendButton"
+                            class="send-button"
+                            aria-label="Send message"
+                            title="Send message"
+                        >
+                            <span>➤</span>
                         </button>
                     </form>
 
-                    <p id="chatStatus" class="status"></p>
-                </section>
+                </div>
 
-            </div>
-
-            <button type="button" id="logoutButton" class="logout-button">
-                Logout
-            </button>
+            </section>
 
         </section>
 
@@ -134,7 +220,4 @@
         <p>CHATX Messenger &copy; 2026</p>
     </footer>
 
-    <script type="module" src="./script.js"></script>
-
-</body>
-</html>
+    <
