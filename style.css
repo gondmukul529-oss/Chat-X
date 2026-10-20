@@ -4,15 +4,13 @@
     --bg: #0b141a;
     --sidebar: #111b21;
     --panel: #202c33;
-    --panel-hover: #26343d;
+    --hover: #26343d;
     --border: #2a3942;
     --text: #e9edef;
     --muted: #8696a0;
     --green: #00a884;
-    --green-hover: #06cf9c;
+    --green-light: #06cf9c;
     --danger: #f15c6d;
-    --bubble-out: #005c4b;
-    --bubble-in: #202c33;
 }
 
 * {
@@ -35,7 +33,6 @@ input {
 
 button {
     cursor: pointer;
-    border: none;
 }
 
 button:disabled {
@@ -47,27 +44,25 @@ button:disabled {
     display: none !important;
 }
 
-/* LOGIN PAGE */
+/* LOGIN */
 
 .auth-section {
     min-height: 100vh;
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 24px;
-    background:
-        radial-gradient(circle at top, #183c3b 0, transparent 45%),
-        var(--bg);
+    align-items: center;
+    padding: 20px;
+    background: radial-gradient(circle at top, #173d36, var(--bg) 65%);
 }
 
 .auth-card {
     width: 100%;
     max-width: 420px;
-    padding: 36px;
+    padding: 35px;
     background: var(--sidebar);
     border: 1px solid var(--border);
     border-radius: 22px;
-    box-shadow: 0 24px 80px #0005;
+    box-shadow: 0 25px 80px #0005;
 }
 
 .brand-logo,
@@ -82,28 +77,26 @@ button:disabled {
 }
 
 .brand-logo {
-    width: 64px;
-    height: 64px;
+    width: 65px;
+    height: 65px;
     margin: 0 auto 18px;
     border-radius: 20px;
     font-size: 30px;
-    box-shadow: 0 8px 25px #00a88435;
 }
 
 .auth-card > h1 {
     text-align: center;
-    font-size: 32px;
+    font-size: 30px;
     letter-spacing: 3px;
 }
 
 .tagline {
-    text-align: center;
     margin: 8px 0 30px;
+    text-align: center;
     color: var(--muted);
 }
 
 .auth-card form h2 {
-    font-size: 21px;
     margin-bottom: 20px;
 }
 
@@ -113,13 +106,12 @@ button:disabled {
 .chat-form input {
     width: 100%;
     min-width: 0;
+    padding: 13px 14px;
     color: var(--text);
-    background: #202c33;
+    background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 13px 14px;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .auth-card input {
@@ -132,66 +124,63 @@ input:focus {
 }
 
 input::placeholder {
-    color: #82929b;
+    color: var(--muted);
 }
 
 #authButton,
 #saveProfileButton {
     width: 100%;
     padding: 13px;
+    border: 0;
     border-radius: 10px;
     background: var(--green);
-    color: #fff;
+    color: white;
     font-weight: 700;
-    transition: background 0.2s;
 }
 
 #authButton:hover,
 #saveProfileButton:hover {
-    background: var(--green-hover);
+    background: var(--green-light);
 }
 
 .switch-text {
-    margin-top: 24px;
+    margin-top: 22px;
     text-align: center;
     color: var(--muted);
-    font-size: 14px;
+    font-size: 13px;
 }
 
 #switchMode {
-    background: transparent;
-    color: var(--green-hover);
-    font-weight: 700;
     margin-left: 5px;
+    background: transparent;
+    color: var(--green-light);
+    font-weight: 700;
 }
 
 .status-message,
 .error-message {
     margin: 10px 0;
-    font-size: 13px;
+    font-size: 12px;
     overflow-wrap: anywhere;
 }
 
 .status-message {
-    color: var(--green-hover);
+    color: var(--green-light);
 }
 
 .error-message {
     color: var(--danger);
 }
 
-/* MAIN APPLICATION */
+/* APP LAYOUT */
 
 .dashboard {
+    display: grid;
+    grid-template-columns: 350px minmax(0, 1fr);
     height: 100vh;
     min-height: 520px;
-    display: grid;
-    grid-template-columns: 340px minmax(0, 1fr);
     overflow: hidden;
-    background: var(--bg);
 }
-
-/* LEFT SIDEBAR */
 
 .sidebar {
     display: flex;
@@ -208,19 +197,19 @@ input::placeholder {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    background: #202c33;
+    padding: 0 18px;
+    background: var(--panel);
     border-bottom: 1px solid var(--border);
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 10px;
 }
 
 .brand h2 {
-    font-size: 21px;
+    font-size: 20px;
     letter-spacing: 1px;
 }
 
@@ -228,17 +217,15 @@ input::placeholder {
     width: 38px;
     height: 38px;
     border-radius: 12px;
-    font-size: 20px;
 }
 
 .logout-button {
     padding: 9px 12px;
-    border-radius: 8px;
     color: white;
-    background: #3a252b;
-    border: 1px solid #573039;
+    background: #46272e;
+    border: 1px solid #63323b;
+    border-radius: 8px;
     font-size: 12px;
-    font-weight: 600;
 }
 
 .logout-button:hover {
@@ -249,7 +236,7 @@ input::placeholder {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 18px 16px 12px;
+    padding: 17px 15px 12px;
 }
 
 .avatar {
@@ -281,7 +268,6 @@ input::placeholder {
 
 .profile-info strong {
     font-size: 14px;
-    overflow-wrap: anywhere;
 }
 
 .profile-info small {
@@ -291,20 +277,19 @@ input::placeholder {
 }
 
 .profile-form {
-    padding: 0 16px 15px;
+    padding: 0 15px 15px;
     border-bottom: 1px solid var(--border);
 }
 
 .profile-form label {
     display: block;
+    margin-bottom: 8px;
     color: var(--muted);
     font-size: 12px;
-    margin-bottom: 8px;
 }
 
 .profile-form input {
     margin-bottom: 10px;
-    padding: 11px 12px;
     font-size: 13px;
 }
 
@@ -317,66 +302,53 @@ input::placeholder {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 19px 17px 12px;
+    padding: 18px 16px 12px;
 }
 
 .contacts-heading h3 {
     font-size: 14px;
-    font-weight: 700;
 }
 
 #contactCount {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     min-width: 23px;
-    height: 23px;
-    padding: 0 6px;
-    border-radius: 20px;
+    padding: 5px 7px;
+    text-align: center;
     background: #173d36;
-    color: #56dcb5;
+    color: var(--green-light);
+    border-radius: 20px;
     font-size: 11px;
 }
 
 .search-input {
     width: calc(100% - 28px);
     margin: 0 14px 12px;
-    padding: 12px 14px;
-    border-radius: 9px;
-    background: #202c33;
     font-size: 13px;
 }
 
 .users-list {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
     padding: 0 8px 12px;
+    overflow-y: auto;
 }
 
 .users-list .message {
     display: flex;
     align-items: center;
     width: 100%;
-    min-height: 68px;
-    margin: 3px 0;
+    min-height: 66px;
     padding: 13px;
+    margin-bottom: 3px;
     text-align: left;
-    color: var(--text);
     background: transparent;
-    border-radius: 10px;
+    color: var(--text);
+    border: 0;
     border-bottom: 1px solid #26343d;
-    transition: background 0.2s;
+    border-radius: 9px;
 }
 
 .users-list .message:hover {
-    background: var(--panel-hover);
-}
-
-.users-list .message:focus,
-.users-list .message.active {
-    background: #17483f;
-    outline: none;
+    background: var(--hover);
 }
 
 .users-list .message strong {
@@ -384,26 +356,30 @@ input::placeholder {
     overflow-wrap: anywhere;
 }
 
+.users-list .message.active {
+    background: #17483f;
+}
+
 .empty-text {
-    padding: 20px 12px;
+    padding: 20px 10px;
     color: var(--muted);
     text-align: center;
     font-size: 13px;
     line-height: 1.6;
 }
 
-/* CHAT PANEL */
+/* CHAT WINDOW */
 
 .chat-panel {
     position: relative;
-    min-width: 0;
-    min-height: 0;
     display: flex;
     flex-direction: column;
-    background-color: #0b141a;
+    min-width: 0;
+    min-height: 0;
+    background-color: var(--bg);
     background-image:
-        radial-gradient(circle at 15% 20%, #17332e30 0, transparent 35%),
-        radial-gradient(circle at 85% 75%, #142a3530 0, transparent 35%);
+        radial-gradient(circle at 20% 20%, #17332e25, transparent 40%),
+        radial-gradient(circle at 80% 80%, #142a3525, transparent 40%);
 }
 
 .chat-welcome {
@@ -412,23 +388,21 @@ input::placeholder {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 30px;
+    padding: 25px;
     text-align: center;
 }
 
 .welcome-icon {
-    width: 84px;
-    height: 84px;
-    margin-bottom: 24px;
-    border-radius: 26px;
+    width: 82px;
+    height: 82px;
+    margin-bottom: 23px;
+    border-radius: 25px;
     font-size: 38px;
-    box-shadow: 0 12px 45px #00a88425;
 }
 
 .chat-welcome h1 {
-    font-size: clamp(24px, 3vw, 34px);
     margin-bottom: 12px;
-    letter-spacing: -1px;
+    font-size: clamp(23px, 3vw, 34px);
 }
 
 .chat-welcome p {
@@ -439,9 +413,8 @@ input::placeholder {
 
 .chat-welcome span {
     margin-top: 10px;
-    color: var(--green-hover);
+    color: var(--green-light);
     font-size: 12px;
-    letter-spacing: 0.5px;
 }
 
 .active-chat {
@@ -457,7 +430,7 @@ input::placeholder {
     display: flex;
     align-items: center;
     padding: 0 22px;
-    background: #202c33;
+    background: var(--panel);
     border-bottom: 1px solid var(--border);
 }
 
@@ -470,7 +443,6 @@ input::placeholder {
 
 .chat-user-info h3 {
     font-size: 15px;
-    font-weight: 600;
     overflow-wrap: anywhere;
 }
 
@@ -483,29 +455,27 @@ input::placeholder {
 .chat-box {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 24px clamp(12px, 4vw, 48px);
-    scroll-behavior: smooth;
+    padding: 24px clamp(12px, 4vw, 45px);
+    overflow-y: auto;
 }
 
 .chat-box > .message {
     align-self: flex-start;
     max-width: min(75%, 600px);
     padding: 10px 13px;
-    background: var(--bubble-in);
-    border: 1px solid #ffffff08;
-    border-radius: 5px 13px 13px 13px;
+    background: #202c33;
     color: var(--text);
-    box-shadow: 0 2px 4px #0002;
+    border-radius: 5px 13px 13px 13px;
     overflow-wrap: anywhere;
+    box-shadow: 0 2px 4px #0002;
 }
 
 .chat-box > .message.sent {
     align-self: flex-end;
-    background: var(--bubble-out);
+    background: #005c4b;
     border-radius: 13px 5px 13px 13px;
 }
 
@@ -529,8 +499,8 @@ input::placeholder {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px clamp(12px, 3vw, 28px);
-    background: #202c33;
+    padding: 16px 22px;
+    background: var(--panel);
     border-top: 1px solid var(--border);
 }
 
@@ -538,41 +508,33 @@ input::placeholder {
     flex: 1;
     padding: 14px 17px;
     border-radius: 25px;
-    border-color: transparent;
     background: #2a3942;
-    font-size: 14px;
-}
-
-.chat-form input:focus {
-    border-color: var(--green);
 }
 
 #sendButton {
-    min-width: 82px;
+    min-width: 80px;
     padding: 13px 18px;
-    border-radius: 24px;
-    background: var(--green);
     color: white;
-    font-size: 13px;
+    background: var(--green);
+    border: 0;
+    border-radius: 25px;
     font-weight: 700;
-    transition: background 0.2s, transform 0.2s;
 }
 
 #sendButton:hover {
-    background: var(--green-hover);
-    transform: translateY(-1px);
+    background: var(--green-light);
 }
 
 .chat-status {
     flex-shrink: 0;
     padding: 0 20px 8px;
-    background: #202c33;
+    background: var(--panel);
     color: #ffca6a;
     font-size: 12px;
     overflow-wrap: anywhere;
 }
 
-/* SCROLLBARS */
+/* SCROLLBAR */
 
 * {
     scrollbar-width: thin;
@@ -588,41 +550,23 @@ input::placeholder {
     border-radius: 10px;
 }
 
-*::-webkit-scrollbar-track {
-    background: transparent;
-}
-
 /* TABLET */
 
-@media (max-width: 900px) {
+@media (max-width: 850px) {
     .dashboard {
-        grid-template-columns: 290px minmax(0, 1fr);
+        grid-template-columns: 280px minmax(0, 1fr);
     }
 
     .sidebar-header {
-        padding: 0 13px;
-    }
-
-    .profile-card {
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-
-    .profile-form {
-        padding-left: 12px;
-        padding-right: 12px;
+        padding: 0 10px;
     }
 
     .chat-header {
-        padding: 0 14px;
+        padding: 0 12px;
     }
 
-    .chat-box {
-        padding: 18px 14px;
-    }
-
-    .chat-box > .message {
-        max-width: 88%;
+    .chat-form {
+        padding: 12px;
     }
 }
 
@@ -630,12 +574,11 @@ input::placeholder {
 
 @media (max-width: 600px) {
     .auth-section {
-        padding: 16px;
+        padding: 15px;
     }
 
     .auth-card {
-        padding: 27px 21px;
-        border-radius: 18px;
+        padding: 25px 20px;
     }
 
     .dashboard {
@@ -645,9 +588,9 @@ input::placeholder {
     }
 
     .sidebar-header {
-        height: 60px;
-        padding: 0 7px;
-        gap: 5px;
+        height: 58px;
+        padding: 0 6px;
+        gap: 4px;
     }
 
     .brand {
@@ -655,7 +598,7 @@ input::placeholder {
     }
 
     .brand h2 {
-        font-size: 13px;
+        font-size: 12px;
         letter-spacing: 0;
     }
 
@@ -663,29 +606,28 @@ input::placeholder {
         width: 27px;
         height: 27px;
         border-radius: 8px;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .logout-button {
-        padding: 6px 5px;
-        font-size: 10px;
+        padding: 6px 4px;
+        font-size: 9px;
     }
 
     .profile-card {
         flex-direction: column;
         align-items: flex-start;
         gap: 7px;
-        padding: 12px 8px 8px;
+        padding: 12px 7px 8px;
     }
 
     .my-avatar {
-        width: 34px;
-        height: 34px;
-        font-size: 14px;
+        width: 33px;
+        height: 33px;
+        font-size: 13px;
     }
 
     .profile-info {
-        gap: 4px;
         width: 100%;
     }
 
@@ -695,11 +637,10 @@ input::placeholder {
 
     .profile-info small {
         font-size: 9px;
-        overflow-wrap: anywhere;
     }
 
     .profile-form {
-        padding: 0 7px 10px;
+        padding: 0 6px 9px;
     }
 
     .profile-form label {
@@ -707,22 +648,17 @@ input::placeholder {
     }
 
     .profile-form input {
-        padding: 9px 6px;
+        padding: 8px 5px;
         font-size: 10px;
     }
 
     #saveProfileButton {
-        padding: 9px 3px;
-        font-size: 10px;
-    }
-
-    .profile-form .status-message {
+        padding: 8px 3px;
         font-size: 10px;
     }
 
     .contacts-heading {
-        padding: 12px 7px 8px;
-        gap: 3px;
+        padding: 12px 6px 8px;
     }
 
     .contacts-heading h3 {
@@ -730,100 +666,91 @@ input::placeholder {
     }
 
     #contactCount {
-        min-width: 18px;
-        height: 18px;
-        padding: 0 4px;
+        min-width: 17px;
+        padding: 3px;
         font-size: 9px;
     }
 
     .search-input {
-        width: calc(100% - 12px);
-        margin: 0 6px 8px;
+        width: calc(100% - 10px);
+        margin: 0 5px 8px;
         padding: 9px 5px;
         font-size: 10px;
     }
 
     .users-list {
-        padding: 0 4px 8px;
+        padding: 0 3px 8px;
     }
 
     .users-list .message {
-        min-height: 52px;
-        padding: 8px 5px;
-        border-radius: 7px;
+        min-height: 48px;
+        padding: 7px 4px;
     }
 
     .users-list .message strong {
-        font-size: 11px;
+        font-size: 10px;
     }
 
     .users-list .empty-text {
-        padding: 12px 3px;
-        font-size: 10px;
+        padding: 10px 2px;
+        font-size: 9px;
     }
 
     .chat-header {
-        height: 62px;
-        padding: 0 9px;
+        height: 60px;
+        padding: 0 8px;
     }
 
     .chat-user-info {
-        gap: 8px;
+        gap: 7px;
     }
 
     .chat-user-info .avatar {
-        width: 34px;
-        height: 34px;
-        font-size: 13px;
-    }
-
-    .chat-user-info h3 {
+        width: 32px;
+        height: 32px;
         font-size: 12px;
     }
 
-    .chat-user-info p {
-        font-size: 10px;
-        overflow-wrap: anywhere;
-    }
-
-    .chat-welcome {
-        padding: 12px 6px;
-    }
-
-    .welcome-icon {
-        width: 50px;
-        height: 50px;
-        margin-bottom: 16px;
-        border-radius: 15px;
-        font-size: 24px;
-    }
-
-    .chat-welcome h1 {
-        font-size: 17px;
-        letter-spacing: 0;
-    }
-
-    .chat-welcome p {
+    .chat-user-info h3 {
         font-size: 11px;
     }
 
-    .chat-welcome span {
+    .chat-user-info p {
+        font-size: 9px;
+    }
+
+    .chat-welcome {
+        padding: 10px 5px;
+    }
+
+    .welcome-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 15px;
+        border-radius: 14px;
+        font-size: 22px;
+    }
+
+    .chat-welcome h1 {
+        font-size: 16px;
+    }
+
+    .chat-welcome p {
         font-size: 10px;
     }
 
+    .chat-welcome span {
+        font-size: 9px;
+    }
+
     .chat-box {
-        gap: 8px;
-        padding: 12px 7px;
+        gap: 7px;
+        padding: 10px 6px;
     }
 
     .chat-box > .message {
-        max-width: 95%;
-        padding: 8px 9px;
-        border-radius: 5px 10px 10px 10px;
-    }
-
-    .chat-box > .message.sent {
-        border-radius: 10px 5px 10px 10px;
+        max-width: 96%;
+        padding: 8px;
     }
 
     .chat-box > .message small {
@@ -831,36 +758,27 @@ input::placeholder {
     }
 
     .chat-box > .message div {
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .chat-form {
         gap: 5px;
-        padding: 10px 6px;
+        padding: 8px 5px;
     }
 
     .chat-form input {
-        padding: 11px 9px;
-        font-size: 11px;
+        padding: 10px 7px;
+        font-size: 10px;
     }
 
     #sendButton {
-        min-width: 43px;
-        padding: 11px 6px;
-        font-size: 10px;
+        min-width: 42px;
+        padding: 10px 5px;
+        font-size: 9px;
     }
 
     .chat-status {
-        padding: 0 7px 7px;
-        font-size: 10px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        scroll-behavior: auto !important;
-        transition: none !important;
+        padding: 0 5px 6px;
+        font-size: 9px;
     }
 }
