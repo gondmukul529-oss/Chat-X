@@ -1,240 +1,135 @@
 * {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background: #0b1120;
-    color: #f1f5f9;
+    margin: 0;
     min-height: 100vh;
+    background: #10141d;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
 }
 
-.app-header {
-    text-align: center;
-    padding: 25px 15px;
-    background: #111c32;
-    border-bottom: 1px solid #263550;
-}
-
-.app-header h1 {
-    font-size: 32px;
-    color: #38bdf8;
-    letter-spacing: 4px;
-}
-
-.app-header p {
-    margin-top: 8px;
-    color: #94a3b8;
-}
-
-.container {
-    width: 95%;
-    max-width: 1100px;
-    margin: 25px auto;
-}
-
-.card {
-    background: #111c32;
-    border: 1px solid #263550;
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.card h2 {
-    margin-bottom: 15px;
-}
-
-#authSection {
-    max-width: 420px;
-    margin: 40px auto;
-}
-
-input {
+.app {
     width: 100%;
-    padding: 13px;
-    margin: 8px 0;
-    border: 1px solid #334155;
-    border-radius: 8px;
+    max-width: 420px;
+    background: #171d29;
+    padding: 28px 22px;
+    border: 1px solid #30394a;
+    border-radius: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 38px;
+    letter-spacing: 3px;
+    margin: 0;
+}
+
+header h1 span {
+    color: #32e6a1;
+}
+
+header p {
+    color: #9aa5b5;
+}
+
+#authSection h2,
+#dashboard h2 {
+    text-align: center;
+}
+
+#authMessage {
+    text-align: center;
+    color: #9aa5b5;
+    margin-bottom: 25px;
+}
+
+#authForm {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+#authForm input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #30394a;
+    background: #222a39;
+    color: white;
+    border-radius: 10px;
     outline: none;
-    background: #0b1120;
-    color: white;
     font-size: 15px;
 }
 
-input:focus {
-    border-color: #38bdf8;
+#authForm input:focus {
+    border-color: #32e6a1;
 }
 
-button {
+#authButton,
+#logoutButton {
+    width: 100%;
+    padding: 14px;
     border: none;
-    border-radius: 8px;
-    padding: 12px 18px;
-    background: #0284c7;
-    color: white;
-    font-size: 15px;
+    border-radius: 10px;
+    background: #32e6a1;
+    color: #10141d;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
 }
 
-button:hover {
-    background: #0369a1;
-}
-
-button:disabled {
+#authButton:disabled {
     opacity: 0.6;
-    cursor: not-allowed;
+    cursor: wait;
 }
 
-#authButton,
-#saveProfileButton {
-    width: 100%;
-    margin-top: 10px;
+.switchText {
+    text-align: center;
+    margin-top: 24px;
+    color: #9aa5b5;
 }
 
-.text-button {
-    background: transparent;
-    color: #38bdf8;
-    padding: 5px;
-}
-
-.text-button:hover {
-    background: transparent;
-    text-decoration: underline;
-}
-
-.status {
-    color: #fbbf24;
-    margin-top: 10px;
-    font-size: 14px;
-    overflow-wrap: anywhere;
-}
-
-.profile-card p {
-    margin: 10px 0;
-    color: #cbd5e1;
-    overflow-wrap: anywhere;
-}
-
-.chat-layout {
-    display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
-    gap: 20px;
-    align-items: start;
-}
-
-.users-card,
-.chat-card {
-    min-width: 0;
-}
-
-#usersList {
-    margin-top: 15px;
-}
-
-#usersList .message {
+#switchMode {
+    border: none;
+    background: none;
+    color: #32e6a1;
+    font-weight: bold;
     cursor: pointer;
-    margin-bottom: 8px;
-    overflow-wrap: anywhere;
 }
 
-.chat-heading {
-    padding-bottom: 15px;
-    border-bottom: 1px solid #263550;
-}
-
-.chat-heading p {
-    color: #94a3b8;
+#errorMessage {
+    color: #ff8585;
     font-size: 14px;
-}
-
-.chat-box {
-    height: 350px;
-    overflow-y: auto;
-    padding: 15px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.message {
-    padding: 12px;
-    border-radius: 9px;
-    background: #1e293b;
+    text-align: center;
     overflow-wrap: anywhere;
 }
 
-.message small {
-    display: block;
-    margin-bottom: 6px;
-    color: #38bdf8;
-}
-
-.empty-message {
-    color: #94a3b8;
+#dashboard {
     text-align: center;
-    margin: auto;
 }
 
-.chat-form {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-top: 1px solid #263550;
-    padding-top: 12px;
-}
-
-.chat-form input {
-    flex: 1;
-    min-width: 0;
-    margin: 0;
-}
-
-.logout-button {
-    background: #dc2626;
-    margin-bottom: 20px;
-}
-
-.logout-button:hover {
-    background: #b91c1c;
-}
-
-footer {
-    text-align: center;
-    padding: 20px;
-    color: #64748b;
+#userEmail {
+    color: #32e6a1;
+    overflow-wrap: anywhere;
+    margin-bottom: 25px;
 }
 
 .hidden {
     display: none !important;
 }
 
-@media (max-width: 700px) {
-    .container {
-        width: 94%;
-        margin-top: 15px;
-    }
-
-    .chat-layout {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .users-card {
-        order: 1;
-    }
-
-    .chat-card {
-        order: 2;
-    }
-
-    .chat-box {
-        height: 300px;
-    }
-
-    .card {
-        padding: 15px;
-    }
+footer {
+    text-align: center;
+    color: #6f7a8b;
+    font-size: 12px;
+    margin-top: 30px;
 }
